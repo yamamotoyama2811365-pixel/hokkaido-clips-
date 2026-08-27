@@ -57,7 +57,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   "防寒グッズ": ["防寒", "ヒートテック", "スノーブーツ", "滑り止め", "手袋", "カイロ"],
 };
 
-// ✈️ 旅行セールバナー
 const CAMPAIGN_BANNERS = [
   {
     id: "his-sale",
@@ -85,36 +84,6 @@ const CAMPAIGN_BANNERS = [
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop&q=80",
     link: "https://travel.rakuten.co.jp/package/",
     badge: "ポイント還元",
-  }
-];
-
-const SPONSOR_ADS = [
-  {
-    tag: "🚗 レンタカー",
-    title: "北海道レンタカー 最安値一括比較",
-    desc: "新千歳空港・札幌駅発。免責補償・カーナビ付きで最大50%OFF！",
-    link: "https://www.tabirai.net/car/hokkaido/",
-    btnText: "最安値プランを比較 ➔",
-    bg: "from-blue-600 to-indigo-700",
-    icon: "🚗"
-  },
-  {
-    tag: "🏨 宿泊クーポン",
-    title: "楽天トラベル 北海道ホテル＆温泉特集",
-    desc: "定山渓・登別・札幌の人気ホテルで使える限定割引クーポン配布中！",
-    link: "https://travel.rakuten.co.jp/yado/hokkaido/",
-    btnText: "限定クーポンを獲得 ➔",
-    bg: "from-rose-600 to-red-700",
-    icon: "🏨"
-  },
-  {
-    tag: "✈️ 格安航空券",
-    title: "新千歳・函館・旭川 格安航空券一括検索",
-    desc: "JAL・ANA・LCC全便の最安値を一発比較！週末トリップにも。",
-    link: "https://www.skygate.co.jp/",
-    btnText: "格安航空券を探す ➔",
-    bg: "from-sky-600 to-blue-800",
-    icon: "✈️"
   }
 ];
 
@@ -326,10 +295,8 @@ export default function HokkaidoTravelApp() {
   const [generatedPlan, setGeneratedPlan] = useState<SpotItem[] | null>(null);
   const [startFromCurrentLocation, setStartFromCurrentLocation] = useState(true);
 
-  // 🎬 AIツアー生成中モーダル
   const [isGeneratingModalOpen, setIsGeneratingModalOpen] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
-  const [currentAdIndex, setCurrentAdIndex] = useState(0);
   const [isAdCompleted, setIsAdCompleted] = useState(false);
 
   const [showBottomBanner, setShowBottomBanner] = useState(true);
@@ -502,12 +469,10 @@ export default function HokkaidoTravelApp() {
     }
   };
 
-  // 🤖 AIトラベルコンシェルジュ：最適周遊プランの計算と生成
   const startGeneratingWithAd = (isFromBookmarks = false) => {
     setIsGeneratingModalOpen(true);
     setGenerationProgress(0);
     setIsAdCompleted(false);
-    setCurrentAdIndex(Math.floor(Math.random() * SPONSOR_ADS.length));
 
     let plan: SpotItem[] = [];
 
@@ -595,7 +560,6 @@ export default function HokkaidoTravelApp() {
   }
 
   const currentRegionInfo = REGION_MAP.find(r => r.id === selectedRegion);
-  const currentAd = SPONSOR_ADS[currentAdIndex];
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 pb-20">
@@ -612,7 +576,7 @@ export default function HokkaidoTravelApp() {
       <Script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
       <div id="google_translate_element" className="hidden" />
 
-      {/* 📱 ブランドヘッダー */}
+      {/* ブランドヘッダー */}
       <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
         <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-3 flex items-center justify-between gap-3">
           
@@ -670,8 +634,30 @@ export default function HokkaidoTravelApp() {
       </header>
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+
+        {/* 🌟 Google AdSense 横バナー広告エリア */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 text-center overflow-hidden shadow-xl no-print">
+          <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
+          <div className="flex justify-center">
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block", minWidth: "250px", width: "100%" }}
+              data-ad-client="ca-pub-5776658615046901"
+              data-ad-slot="6392139179"
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+            <Script
+              id="adsbygoogle-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+              }}
+            />
+          </div>
+        </div>
         
-        {/* 🌙 ナイトタブ限定バナー */}
+        {/* ナイトタブ限定バナー */}
         {selectedGenre === "night" && (
           <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-pink-950/80 border border-purple-500/50 shadow-2xl animate-fade-in no-print space-y-2">
             <div className="flex items-center justify-between">
@@ -700,7 +686,7 @@ export default function HokkaidoTravelApp() {
           </div>
         )}
 
-        {/* ✈️ 一般旅行セールバナー */}
+        {/* 一般旅行セールバナー */}
         {selectedGenre !== "night" && (
           <div className="mb-6 space-y-2.5 no-print">
             <div className="flex items-center justify-between">
@@ -736,7 +722,7 @@ export default function HokkaidoTravelApp() {
           
           <div className="w-full lg:flex-1 space-y-6">
             
-            {/* 🔍 検索バー */}
+            {/* 検索バー */}
             <div className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 no-print">
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 text-slate-400 text-sm">🔍</span>
@@ -797,7 +783,7 @@ export default function HokkaidoTravelApp() {
               ))}
             </div>
 
-            {/* 🚗 AIツアールート表示枠（完全版） */}
+            {/* AIツアールート表示枠 */}
             {generatedPlan && (
               <div ref={planSectionRef} className="print-area p-5 md:p-6 bg-slate-900/95 rounded-2xl border border-teal-500/50 shadow-2xl space-y-5 scroll-mt-24">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
@@ -841,7 +827,6 @@ export default function HokkaidoTravelApp() {
                   </div>
                 </div>
 
-                {/* 経路サマリーバー */}
                 <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex items-center overflow-x-auto gap-2 text-xs">
                   <span className="font-bold text-teal-400 whitespace-nowrap bg-teal-950 px-2.5 py-1 rounded-md border border-teal-500/40">
                     📍 {startFromCurrentLocation ? "現在地" : "出発地"}
@@ -857,7 +842,6 @@ export default function HokkaidoTravelApp() {
                   ))}
                 </div>
 
-                {/* 各ステップごとの詳細案内 */}
                 <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-teal-500/40">
                   {generatedPlan.map((spot, idx) => (
                     <div key={spot.id} className="relative">
@@ -989,7 +973,6 @@ export default function HokkaidoTravelApp() {
                         </div>
                       </div>
 
-                      {/* ナイトタブ内のインフィードPRバナー */}
                       {selectedGenre === "night" && idx === 1 && (
                         <a
                           href="https://www.nights.ne.jp/hokkaido/"
@@ -1018,12 +1001,9 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* 右側：AIトラベルコンシェルジュ操作パネル ＆ 詳細プレビュー（完全復元） */}
-          {/* ========================================================================= */}
+          {/* 右側パネル */}
           <div className="w-full lg:w-[420px] lg:sticky lg:top-20 space-y-5 flex-shrink-0 no-print">
             
-            {/* ❤️ マークしたスポットだけのツアー作成カード */}
             {bookmarkedSpots.length > 0 && (
               <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40 shadow-xl space-y-3">
                 <div className="flex items-center justify-between">
@@ -1047,7 +1027,6 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            {/* 🤖 AIトラベルコンシェルジュ（フルコントロール枠） */}
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
               <div>
                 <h3 className="text-sm font-bold text-teal-400 flex items-center gap-2">
@@ -1056,7 +1035,6 @@ export default function HokkaidoTravelApp() {
                 <p className="text-xs text-slate-400 mt-1">エリアと滞在時間を選ぶだけで、無理のない最適周遊ルートを作成します。</p>
               </div>
 
-              {/* 1. エリア選択 */}
               <div>
                 <label className="text-xs font-bold text-slate-300 mb-2 block">1. 出発・観光エリアを選択</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1079,7 +1057,6 @@ export default function HokkaidoTravelApp() {
                 </div>
               </div>
 
-              {/* 2. 滞在時間選択 */}
               <div>
                 <label className="text-xs font-bold text-slate-300 mb-2 block">2. ツアー滞在時間</label>
                 <div className="grid grid-cols-4 gap-2">
@@ -1099,7 +1076,6 @@ export default function HokkaidoTravelApp() {
                 </div>
               </div>
 
-              {/* 現在地出発チェック */}
               <div className="flex items-center gap-2 pt-1">
                 <input 
                   type="checkbox" 
@@ -1122,7 +1098,6 @@ export default function HokkaidoTravelApp() {
               </button>
             </div>
 
-            {/* スポット詳細 ＆ 予約・お土産プレビュー（完全復元） */}
             {activeSpot && (
               <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
                 <div className="relative aspect-video bg-black">
@@ -1237,28 +1212,10 @@ export default function HokkaidoTravelApp() {
                 </div>
               </div>
             )}
-
-            {/* 🖼️ サイドバーPRバナー */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/40 via-indigo-950/40 to-slate-900 border border-blue-500/30 shadow-lg text-center space-y-2">
-              <span className="text-[9px] text-slate-500 uppercase tracking-widest font-bold block">Sponsored / PR</span>
-              <div className="text-xs font-black text-blue-200">🚗 北海道レンタカー 最安値一括比較・予約</div>
-              <p className="text-[11px] text-slate-300 leading-snug">新千歳空港・札幌駅周辺の乗り捨て対応！免責補償込み格安プラン。</p>
-              <a
-                href="https://www.tabirai.net/car/hokkaido/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow transition active:scale-95"
-              >
-                レンタカーを最安値で比較・予約 ➔
-              </a>
-            </div>
-
           </div>
-
         </div>
       </div>
 
-      {/* 🚗 画面下部の追従フローティングバナー */}
       {showBottomBanner && (
         <div className="fixed bottom-3 inset-x-3 md:inset-x-auto md:right-8 md:bottom-6 md:w-[460px] z-40 animate-bounce-short no-print">
           <div className="bg-slate-900/95 backdrop-blur-xl border border-teal-500/50 p-3.5 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.8)] flex items-center justify-between gap-3 relative">
@@ -1295,7 +1252,7 @@ export default function HokkaidoTravelApp() {
         </div>
       )}
 
-      {/* 🎬 AIツアー生成中・リワード広告＆完了モーダル */}
+      {/* 🎬 AIツアー生成中・完了モーダル（AdSense広告搭載版） */}
       {isGeneratingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in no-print">
           <div className="bg-slate-900 border border-teal-400/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_20px_60px_rgba(0,0,0,0.95)] relative space-y-6">
@@ -1317,25 +1274,26 @@ export default function HokkaidoTravelApp() {
               </p>
             </div>
 
-            <div className={`p-5 rounded-2xl bg-gradient-to-br ${currentAd.bg} text-white shadow-xl space-y-3 relative overflow-hidden group`}>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] bg-black/40 backdrop-blur-md px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  {currentAd.tag} (PR)
-                </span>
-                <span className="text-2xl">{currentAd.icon}</span>
+            {/* モーダル内のGoogle AdSense広告枠 */}
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center shadow-xl overflow-hidden">
+              <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
+              <div className="flex justify-center items-center min-h-[120px]">
+                <ins
+                  className="adsbygoogle"
+                  style={{ display: "block", width: "100%" }}
+                  data-ad-client="ca-pub-5776658615046901"
+                  data-ad-slot="6392139179"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"
+                ></ins>
+                <Script
+                  id="adsbygoogle-modal-init"
+                  strategy="afterInteractive"
+                  dangerouslySetInnerHTML={{
+                    __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+                  }}
+                />
               </div>
-              <div>
-                <h4 className="font-black text-base sm:text-lg leading-snug">{currentAd.title}</h4>
-                <p className="text-xs text-white/90 mt-1 leading-relaxed">{currentAd.desc}</p>
-              </div>
-              <a
-                href={currentAd.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-full py-2.5 bg-white text-slate-950 font-black text-xs rounded-xl shadow hover:bg-slate-100 transition active:scale-98"
-              >
-                {currentAd.btnText}
-              </a>
             </div>
 
             <div>
