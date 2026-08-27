@@ -605,61 +605,32 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
 
-        {/* 🌟 トップのアドセンス広告枠：右側のAIコンシェルジュと重ならないよう、左カラム専用幅に安全にコンテナ化 */}
-        <div className="w-full lg:max-w-[calc(100%-450px)] bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center shadow-xl no-print">
-          <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
-          <div className="flex justify-center items-center">
-            <ins
-              className="adsbygoogle"
-              style={{ display: "block", width: "100%", maxHeight: "90px" }}
-              data-ad-client="ca-pub-5776658615046901"
-              data-ad-slot="6392139179"
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-            <Script
-              id="adsbygoogle-init"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
-              }}
-            />
-          </div>
-        </div>
-        
-        {/* ナイトタブ限定バナー */}
-        {selectedGenre === "night" && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-pink-950/80 border border-purple-500/50 shadow-2xl animate-fade-in no-print space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🌙</span>
-                <span className="text-xs font-black text-purple-200 tracking-wider">すすきのナイトタウン情報・夜遊び特別ガイド</span>
-                <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded">PR</span>
-              </div>
-              <span className="text-[10px] text-slate-400">※20歳以上対象</span>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
-              <div>
-                <h3 className="font-extrabold text-sm text-white">すすきのの人気店・限定クーポン＆最新ナイトガイド</h3>
-                <p className="text-xs text-slate-300 mt-0.5">有名店から隠れ家バー、エンタメスポットまで網羅！お得な限定プランを掲載中。</p>
-              </div>
-              <a
-                href="https://www.nights.ne.jp/hokkaido/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:opacity-90 text-white font-black text-xs text-center rounded-xl shadow-lg whitespace-nowrap transition active:scale-95 flex-shrink-0"
-              >
-                すすきの夜遊び情報を探す ➔
-              </a>
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
             
+            {/* 🌟 トップの広告枠：横幅を全体に広げ、右側の空白スペースを完全に解消して美しい配置にしました */}
+            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl no-print">
+              <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
+              <div className="flex justify-center items-center">
+                <ins
+                  className="adsbygoogle"
+                  style={{ display: "block", width: "100%", maxHeight: "90px" }}
+                  data-ad-client="ca-pub-5776658615046901"
+                  data-ad-slot="6392139179"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"
+                ></ins>
+                <Script
+                  id="adsbygoogle-init"
+                  strategy="afterInteractive"
+                  dangerouslySetInnerHTML={{
+                    __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+                  }}
+                />
+              </div>
+            </div>
+
             {/* 検索バー */}
             <div className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 no-print">
               <div className="relative flex items-center">
