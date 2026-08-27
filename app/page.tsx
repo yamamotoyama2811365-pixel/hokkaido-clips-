@@ -604,13 +604,13 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        {/* 🌟 1. ページ最上部のフルサイズ広告枠 */}
-        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl no-print">
+        {/* 🌟 1. ページ最上部の広告枠（横幅・高さを綺麗に制限して暴走を防ぐ） */}
+        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl overflow-hidden no-print">
           <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center items-center overflow-hidden max-h-[90px]">
             <ins
               className="adsbygoogle"
-              style={{ display: "block", width: "100%", maxHeight: "90px" }}
+              style={{ display: "block", width: "100%", maxHeight: "80px" }}
               data-ad-client="ca-pub-5776658615046901"
               data-ad-slot="6392139179"
               data-ad-format="auto"
@@ -626,7 +626,7 @@ export default function HokkaidoTravelApp() {
           </div>
         </div>
 
-        {/* 🌟 2. メインコンテンツ（左：動画一覧・検索、右：AIコンシェルジュ） */}
+        {/* 🌟 2. メインレイアウト（左：動画一覧、右：AIコンシェルジュ） */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
@@ -661,6 +661,22 @@ export default function HokkaidoTravelApp() {
               </div>
             </div>
 
+            {/* ナイトタブ選択時の特別な案内（すすきのキャバクラ・スナック・音楽クラブ等） */}
+            {selectedGenre === "night" && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/90 via-slate-900 to-pink-950/90 border border-purple-500/50 shadow-xl space-y-2 no-print">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🌙</span>
+                    <span className="text-xs font-black text-purple-200 tracking-wider">すすきのナイト＆エンタメ総合ガイド（キャバクラ・スナック・音楽クラブ）</span>
+                  </div>
+                  <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded">PR / 20歳以上</span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  すすきのの人気キャバクラ、ニュークラブ、スナック、そして音楽で朝まで盛り上がるナイトクラブ（DJイベント等）のリアルなSNS動画をピックアップ！
+                </p>
+              </div>
+            )}
+
             {/* カテゴリ切り替え */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 no-print">
               {[
@@ -670,7 +686,7 @@ export default function HokkaidoTravelApp() {
                 { id: "souvenir", label: "🎁 限定土産 (Hot 20)" },
                 { id: "stay", label: "🏨 宿泊・温泉 (Hot 20)" },
                 { id: "spot", label: "🏔️ 観光名所 (Hot 20)" },
-                { id: "night", label: "🌙 ナイト (すすきの)" },
+                { id: "night", label: "🌙 ナイト (すすきの・クラブ等)" },
                 { id: "travel_gear", label: "🧳 旅行準備・必需品" },
               ].map((tab) => (
                 <button
@@ -844,7 +860,7 @@ export default function HokkaidoTravelApp() {
             <div className="no-print">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">
-                  {selectedGenre === "night" ? "🌙 すすきの ナイト＆バー・シメパフェ動画" : selectedGenre === "all" ? "🔥 ホット＆新着トレンド動画" : `${selectedGenre.toUpperCase()} おすすめTOP20`}
+                  {selectedGenre === "night" ? "🌙 すすきの ナイト＆エンタメ動画（キャバクラ・スナック・音楽クラブ）" : selectedGenre === "all" ? "🔥 ホット＆新着トレンド動画" : `${selectedGenre.toUpperCase()} おすすめTOP20`}
                 </h2>
                 <span className="text-xs text-slate-500">{filteredSpots.length} 件</span>
               </div>
@@ -1007,13 +1023,13 @@ export default function HokkaidoTravelApp() {
               </button>
             </div>
 
-            {/* 右側のGoogle AdSense広告枠 */}
-            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden">
+            {/* 右側のGoogle AdSense広告枠（サイズ安全版） */}
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden max-h-[220px]">
               <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
-              <div className="flex justify-center items-center min-h-[150px]">
+              <div className="flex justify-center items-center overflow-hidden max-h-[150px]">
                 <ins
                   className="adsbygoogle"
-                  style={{ display: "block", width: "100%" }}
+                  style={{ display: "block", width: "100%", maxHeight: "140px" }}
                   data-ad-client="ca-pub-5776658615046901"
                   data-ad-slot="6392139179"
                   data-ad-format="auto"
