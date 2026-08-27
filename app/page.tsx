@@ -605,13 +605,13 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
 
-        {/* 🌟 トップの広告枠：左側（動画一覧側）の幅だけに収まるように調整 */}
-        <div className="w-full max-w-[940px] bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center max-h-[120px] overflow-hidden shadow-xl no-print">
+        {/* 🌟 トップのアドセンス広告枠：右側のAIコンシェルジュと重ならないよう、左カラム専用幅に安全にコンテナ化 */}
+        <div className="w-full lg:max-w-[calc(100%-450px)] bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center shadow-xl no-print">
           <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
           <div className="flex justify-center items-center">
             <ins
               className="adsbygoogle"
-              style={{ display: "block", minWidth: "250px", width: "100%", maxHeight: "90px" }}
+              style={{ display: "block", width: "100%", maxHeight: "90px" }}
               data-ad-client="ca-pub-5776658615046901"
               data-ad-slot="6392139179"
               data-ad-format="auto"
@@ -939,7 +939,7 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル（AIコンシェルジュが綺麗に上に配置されます） */}
+          {/* 右側パネル（AIコンシェルジュ） */}
           <div className="w-full lg:w-[420px] lg:sticky lg:top-20 space-y-5 flex-shrink-0 no-print">
             
             {bookmarkedSpots.length > 0 && (
