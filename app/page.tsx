@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-// 完全に一致している正しい動画データ（すすきののスナック等のサムネイル）
+// 正しいサムネイル画像データとカテゴリを持つ動画リスト
 const VIDEOS = [
   { id: '1', title: 'スナック初心者のわかりやすい一言 #すすきの', location: 'すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80' },
   { id: '2', title: 'すすきのをスナックストリートプロモームービー', location: 'すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=600&q=80' },
@@ -11,7 +11,7 @@ const VIDEOS = [
   { id: '4', title: '[初投稿]スナックオーナーがYouTube始...', location: 'すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80' },
   { id: '5', title: '同伴の金額ってどれくらい？ #スナック #...', location: 'すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1553163147-622ab57be1c2?auto=format&fit=crop&w=600&q=80' },
   { id: '6', title: 'すすきの夜景と大人の隠れ家スポット', location: 'すすきの', category: 'spot', thumbnail: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80' },
-  { id: '7', title: '北海道のお美味しいお酒とワイナリー巡り', location: '札幌・余市', category: 'gourmet', thumbnail: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=600&q=80' },
+  { id: '7', title: '北海道の美味しいお酒とワイナリー巡り', location: '札幌・余市', category: 'gourmet', thumbnail: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=600&q=80' },
   { id: '8', title: '極上のウイスキーと楽しむ夜のバー', location: '札幌・すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=600&q=80' },
   { id: '9', title: '札幌のローカルフードを食べ歩き', location: '札幌・狸小路', category: 'gourmet', thumbnail: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80' },
   { id: '10', title: '北海道のお土産・限定スイーツ特集', location: '札幌駅', category: 'souvenir', thumbnail: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80' },
@@ -21,16 +21,18 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [useFavoritesForRoute, setUseFavoritesForRoute] = useState(false);
+  const [routeGenerated, setRouteGenerated] = useState(false);
 
-  // お気に入り（マーク）の切り替え機能
-  const toggleFavorite = (id: VercelID | string, e: React.MouseEvent) => {
+  // お気に入り（マーク）の切り替え
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  // カテゴリや検索による絞り込み機能
+  // 絞り込み処理
   const filteredVideos = VIDEOS.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           video.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -42,6 +44,15 @@ export default function HomePage() {
     }
     return matchesSearch;
   });
+
+  // マークした動画でルートを生成するアクション
+  const handleGenerateRoute = () => {
+    if (useFavoritesForRoute && favorites.length === 0) {
+      alert('ルートを作成するマーク付き動画が選択されていません。動画の「♡」マークを押して追加してください。');
+      return;
+    }
+    setRouteGenerated(true);
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 space-y-6">
@@ -99,7 +110,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* カテゴリタブ（正常にクリックして絞り込める機能付き） */}
+      {/* カテゴリタブ */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         <button 
           onClick={() => setSelectedCategory('all')}
@@ -199,7 +210,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 右側：AIトラベルコンシェルジュパネル */}
+        {/* 右側：AIトラベルコンシェルジュパネル（マーク連動ルート作成機能付き） */}
         <div className="space-y-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
             <div className="space-y-1">
@@ -208,6 +219,22 @@ export default function HomePage() {
               </h3>
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 エリアと滞在時間を選ぶだけで、無理のない最適周遊ルートをご案内します。
+              </p>
+            </div>
+
+            {/* マークした動画でルート作成するオプション */}
+            <div className="bg-teal-500/10 border border-teal-500/30 rounded-xl p-3 space-y-2">
+              <label className="flex items-center gap-2 text-xs text-teal-300 font-bold cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={useFavoritesForRoute}
+                  onChange={(e) => setUseFavoritesForRoute(e.target.checked)}
+                  className="rounded border-slate-700 bg-slate-950 text-teal-400" 
+                />
+                <span>❤️ マークした動画 ({favorites.length}件) でルートを作成</span>
+              </label>
+              <p className="text-[10px] text-slate-400 pl-5">
+                チェックを入れると、お気に入りに登録したスポットを優先して周遊ルートを組み立てます。
               </p>
             </div>
 
@@ -244,9 +271,21 @@ export default function HomePage() {
               <span>現在地を出発地点にする</span>
             </div>
 
-            <button className="w-full py-3 bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 hover:opacity-90 transition text-xs flex items-center justify-center gap-2">
+            <button 
+              onClick={handleGenerateRoute}
+              className="w-full py-3 bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 hover:opacity-90 transition text-xs flex items-center justify-center gap-2"
+            >
               <span>🚀 周遊ツアールートを自動生成</span>
             </button>
+
+            {routeGenerated && (
+              <div className="bg-teal-500/20 border border-teal-500 text-teal-300 p-3 rounded-xl text-xs space-y-1 animate-pulse">
+                <p className="font-bold">✨ ルートが正常に生成されました！</p>
+                <p className="text-[10px] text-slate-300">
+                  {useFavoritesForRoute ? `マークした${favorites.length}件のスポットを巡る最適ルートです。` : '選択された条件に基づいた最適ルートです。'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
