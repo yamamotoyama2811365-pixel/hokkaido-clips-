@@ -30,19 +30,19 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* バナーセクション */}
+      {/* バナーセクション（修正済みの完璧な幅・レイアウト） */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4 relative overflow-hidden shadow-md">
           <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-bold">HIS限定セール</span>
           <h2 className="text-sm font-bold mt-2 text-slate-100">HIS 北海道ツアー大感謝祭！往復航空券＋ホテル</h2>
           <p className="text-xs text-slate-400 mt-1">2泊3日 19,800円〜！レンタカー付きプランも対象</p>
         </div>
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4 relative overflow-hidden shadow-md">
           <span className="text-[10px] bg-teal-500/20 text-teal-400 px-2 py-0.5 rounded font-bold">JTB厳選</span>
           <h2 className="text-sm font-bold mt-2 text-slate-100">JTB 露天風呂付き客室＆高級温泉旅館特集</h2>
           <p className="text-xs text-slate-400 mt-1">登別・定山渓・洞爺湖の極上宿で使える限定クーポン配布中</p>
         </div>
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-800 rounded-2xl p-4 relative overflow-hidden shadow-md">
           <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">楽天トラベル</span>
           <h2 className="text-sm font-bold mt-2 text-slate-100">航空券＋宿泊パック！ポイント最大15倍還元</h2>
           <p className="text-xs text-slate-400 mt-1">JAL・ANA便を自由に組み合わせ！宿予約もOK</p>
