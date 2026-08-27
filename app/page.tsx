@@ -602,10 +602,10 @@ export default function HokkaidoTravelApp() {
         </div>
       </header>
 
-      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
+      <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        {/* 🌟 トップの広告枠：横幅いっぱい（フルサイズ）に配置 */}
-        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center shadow-xl no-print">
+        {/* 🌟 1. ページ最上部のフルサイズ広告枠 */}
+        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl no-print">
           <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
           <div className="flex justify-center items-center">
             <ins
@@ -626,6 +626,7 @@ export default function HokkaidoTravelApp() {
           </div>
         </div>
 
+        {/* 🌟 2. メインコンテンツ（左：動画一覧・検索、右：AIコンシェルジュ） */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
@@ -909,8 +910,8 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル（AIコンシェルジュ ＋ 2つ目の広告スペース埋め） */}
-          <div className="w-full lg:w-[420px] lg:sticky lg:top-20 space-y-5 flex-shrink-0 no-print">
+          {/* 右側パネル（AIコンシェルジュ ＋ 広告スペース） */}
+          <div className="w-full lg:w-[420px] space-y-5 flex-shrink-0 no-print">
             
             {bookmarkedSpots.length > 0 && (
               <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40 shadow-xl space-y-3">
@@ -1006,7 +1007,7 @@ export default function HokkaidoTravelApp() {
               </button>
             </div>
 
-            {/* 🌟 右側の空きスペースを埋める2つ目のGoogle AdSense広告枠 */}
+            {/* 右側のGoogle AdSense広告枠 */}
             <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden">
               <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center min-h-[150px]">
