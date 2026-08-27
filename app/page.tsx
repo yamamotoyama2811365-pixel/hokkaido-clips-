@@ -2,12 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import Script from 'next/script';
+import { supabase } from '@/app/supabase';
 
 export default function Home() {
+  const [clips, setClips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(false);
+    async function fetchClips() {
+      try {
+        const { data, error } = await supabase.from('clips').select('*');
+        if (data) {
+          setClips(data);
+        }
+      } catch (err) {
+        console.error('Error fetching clips:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchClips();
   }, []);
 
   return (
@@ -46,23 +60,32 @@ export default function Home() {
           </div>
         </div>
 
-        {/* メインコンテンツエリア */}
+        {/* メインコンテンツエリア（元々の動画・スポット一覧） */}
         <section className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
-          <h2 className="text-xl font-bold mb-4 text-slate-200">おすすめクリップ一覧</h2>
+          <h2 className="text-xl font-bold mb-4 text-slate-200">北海道クリップ一覧</h2>
           {loading ? (
             <div className="text-center py-12 text-slate-400 animate-pulse">
               HOKKAIDO CLIPS Loading...
             </div>
-          ) : (
+          ) : clips.length === 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-all">
+              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
                 <h3 className="font-bold text-cyan-300">札幌・小樽の定番スポット</h3>
                 <p className="text-sm text-slate-400 mt-1">美しい夜景と美味しいグルメを満喫するモデルコース。</p>
               </div>
-              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-all">
+              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
                 <h3 className="font-bold text-cyan-300">富良野・美瑛の絶景ドライブ</h3>
                 <p className="text-sm text-slate-400 mt-1">広大な大自然と色鮮やかな花畑を巡るおすすめルート。</p>
               </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {clips.map((clip, index) => (
+                <div key={index} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+                  <h3 className="font-bold text-cyan-300">{clip.title || 'スポット'}</h3>
+                  <p className="text-sm text-slate-400 mt-1">{clip.description || ''}</p>
+                </div>
+              ))}
             </div>
           )}
         </section>
