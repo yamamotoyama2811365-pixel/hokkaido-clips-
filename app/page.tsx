@@ -602,35 +602,36 @@ export default function HokkaidoTravelApp() {
         </div>
       </header>
 
+      {/* 🌟 メインの全体コンテナ */}
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        {/* 🌟 1. ページ最上部の広告枠（横幅・高さを綺麗に制限して暴走を防ぐ） */}
-        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl overflow-hidden no-print">
-          <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
-          <div className="flex justify-center items-center overflow-hidden max-h-[90px]">
-            <ins
-              className="adsbygoogle"
-              style={{ display: "block", width: "100%", maxHeight: "80px" }}
-              data-ad-client="ca-pub-5776658615046901"
-              data-ad-slot="6392139179"
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            ></ins>
-            <Script
-              id="adsbygoogle-init"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 🌟 2. メインレイアウト（左：動画一覧、右：AIコンシェルジュ） */}
+        {/* 🌟 2カラムの左側（動画エリア）と完全に幅を合わせるため、下の検索窓と同じ親コンテナ内に上部広告を入れ込みます */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
             
+            {/* 🌟 1. ページ最上部の広告枠（左側カラムの幅いっぱいにピタッと収まるように配置） */}
+            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl overflow-hidden no-print">
+              <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
+              <div className="flex justify-center items-center overflow-hidden max-h-[90px]">
+                <ins
+                  className="adsbygoogle"
+                  style={{ display: "block", width: "100%", maxHeight: "80px" }}
+                  data-ad-client="ca-pub-5776658615046901"
+                  data-ad-slot="6392139179"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"
+                ></ins>
+                <Script
+                  id="adsbygoogle-init"
+                  strategy="afterInteractive"
+                  dangerouslySetInnerHTML={{
+                    __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+                  }}
+                />
+              </div>
+            </div>
+
             {/* 検索バー */}
             <div className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 no-print">
               <div className="relative flex items-center">
@@ -1023,7 +1024,7 @@ export default function HokkaidoTravelApp() {
               </button>
             </div>
 
-            {/* 右側のGoogle AdSense広告枠（サイズ安全版） */}
+            {/* 右側のGoogle AdSense広告枠 */}
             <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden max-h-[220px]">
               <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center overflow-hidden max-h-[150px]">
