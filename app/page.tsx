@@ -269,7 +269,6 @@ export default function HokkaidoTravelApp() {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [isAdCompleted, setIsAdCompleted] = useState(false);
 
-  const [showBottomBanner, setShowBottomBanner] = useState(true);
   const planSectionRef = useRef<HTMLDivElement>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
@@ -605,32 +604,32 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
 
+        {/* トップの広告枠 */}
+        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center shadow-xl no-print">
+          <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
+          <div className="flex justify-center items-center">
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block", width: "100%", maxHeight: "90px" }}
+              data-ad-client="ca-pub-5776658615046901"
+              data-ad-slot="6392139179"
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            ></ins>
+            <Script
+              id="adsbygoogle-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+              }}
+            />
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
             
-            {/* 🌟 トップの広告枠：横幅を全体に広げ、右側の空白スペースを完全に解消して美しい配置にしました */}
-            <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl no-print">
-              <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
-              <div className="flex justify-center items-center">
-                <ins
-                  className="adsbygoogle"
-                  style={{ display: "block", width: "100%", maxHeight: "90px" }}
-                  data-ad-client="ca-pub-5776658615046901"
-                  data-ad-slot="6392139179"
-                  data-ad-format="auto"
-                  data-full-width-responsive="true"
-                ></ins>
-                <Script
-                  id="adsbygoogle-init"
-                  strategy="afterInteractive"
-                  dangerouslySetInnerHTML={{
-                    __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
-                  }}
-                />
-              </div>
-            </div>
-
             {/* 検索バー */}
             <div className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 no-print">
               <div className="relative flex items-center">
@@ -910,7 +909,7 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル（AIコンシェルジュ） */}
+          {/* 右側パネル（AIコンシェルジュ ＋ 広告スペース） */}
           <div className="w-full lg:w-[420px] lg:sticky lg:top-20 space-y-5 flex-shrink-0 no-print">
             
             {bookmarkedSpots.length > 0 && (
@@ -921,7 +920,7 @@ export default function HokkaidoTravelApp() {
                     <span>マークしたお店だけでツアー作成</span>
                   </div>
                   <span className="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full border border-rose-500/30 font-bold">
-                    {bookmarkedSpots.length} 件選択中
+                    {bookmarkedIds.length} 件選択中
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-snug">
@@ -1005,6 +1004,28 @@ export default function HokkaidoTravelApp() {
               >
                 <span>🚀</span> <span>周遊ツアールートを自動生成</span>
               </button>
+            </div>
+
+            {/* 右側のGoogle AdSense広告枠 */}
+            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden">
+              <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
+              <div className="flex justify-center items-center min-h-[150px]">
+                <ins
+                  className="adsbygoogle"
+                  style={{ display: "block", width: "100%" }}
+                  data-ad-client="ca-pub-5776658615046901"
+                  data-ad-slot="6392139179"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"
+                ></ins>
+                <Script
+                  id="adsbygoogle-sidebar-init"
+                  strategy="afterInteractive"
+                  dangerouslySetInnerHTML={{
+                    __html: "(adsbygoogle = window.adsbygoogle || []).push({});",
+                  }}
+                />
+              </div>
             </div>
 
             {activeSpot && (
@@ -1124,42 +1145,6 @@ export default function HokkaidoTravelApp() {
           </div>
         </div>
       </div>
-
-      {showBottomBanner && (
-        <div className="fixed bottom-3 inset-x-3 md:inset-x-auto md:right-8 md:bottom-6 md:w-[460px] z-40 animate-bounce-short no-print">
-          <div className="bg-slate-900/95 backdrop-blur-xl border border-teal-500/50 p-3.5 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.8)] flex items-center justify-between gap-3 relative">
-            
-            <button
-              onClick={() => setShowBottomBanner(false)}
-              className="absolute -top-2.5 -right-2.5 w-6 h-6 bg-slate-800 text-slate-400 hover:text-white rounded-full border border-slate-700 flex items-center justify-center text-xs font-bold shadow"
-            >
-              ✕
-            </button>
-
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center text-xl flex-shrink-0 shadow">
-                🚗
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] bg-teal-500/20 text-teal-300 font-extrabold px-1.5 py-0.2 rounded border border-teal-500/30">PR</span>
-                  <span className="font-bold text-xs text-white truncate">北海道レンタカー一括比較</span>
-                </div>
-                <p className="text-[10px] text-slate-300 truncate mt-0.5">新千歳・札幌駅発 最安値2,500円〜</p>
-              </div>
-            </div>
-
-            <a
-              href="https://www.tabirai.net/car/hokkaido/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-extrabold text-xs shadow-md whitespace-nowrap transition active:scale-95 flex-shrink-0"
-            >
-              空車確認 ➔
-            </a>
-          </div>
-        </div>
-      )}
 
       {/* 🎬 AIツアー生成中・完了モーダル */}
       {isGeneratingModalOpen && (
