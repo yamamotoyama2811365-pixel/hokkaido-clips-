@@ -635,7 +635,7 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
 
-        {/* 🌟 Google AdSense 横バナー広告エリア */}
+        {/* Google AdSense 横バナー広告エリア */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 text-center overflow-hidden shadow-xl no-print">
           <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
           <div className="flex justify-center">
