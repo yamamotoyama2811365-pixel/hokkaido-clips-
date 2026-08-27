@@ -60,7 +60,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* メインコンテンツエリア（元々の動画・スポット一覧） */}
+        {/* メインコンテンツエリア（動画・スポット一覧） */}
         <section className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
           <h2 className="text-xl font-bold mb-4 text-slate-200">北海道クリップ一覧</h2>
           {loading ? (
