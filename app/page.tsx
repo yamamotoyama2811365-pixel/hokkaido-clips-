@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-// 正しいサムネイル画像データとカテゴリを持つ動画リスト
+// 画像と完全に一致する動画データリスト
 const VIDEOS = [
   { id: '1', title: 'スナック初心者のわかりやすい一言 #すすきの', location: 'すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80' },
   { id: '2', title: 'すすきのをスナックストリートプロモームービー', location: 'すすきの', category: 'night', thumbnail: 'https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=600&q=80' },
@@ -21,18 +21,17 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [useFavoritesForRoute, setUseFavoritesForRoute] = useState(false);
+  const [selectedArea, setSelectedArea] = useState('道央');
+  const [selectedDuration, setSelectedDuration] = useState('4時間');
   const [routeGenerated, setRouteGenerated] = useState(false);
 
-  // お気に入り（マーク）の切り替え
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
+    e.stopPropagation();
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  // 絞り込み処理
   const filteredVideos = VIDEOS.filter(video => {
     const matchesSearch = video.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           video.location.toLowerCase().includes(searchQuery.toLowerCase());
@@ -44,15 +43,6 @@ export default function HomePage() {
     }
     return matchesSearch;
   });
-
-  // マークした動画でルートを生成するアクション
-  const handleGenerateRoute = () => {
-    if (useFavoritesForRoute && favorites.length === 0) {
-      alert('ルートを作成するマーク付き動画が選択されていません。動画の「♡」マークを押して追加してください。');
-      return;
-    }
-    setRouteGenerated(true);
-  };
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 space-y-6">
@@ -112,54 +102,24 @@ export default function HomePage() {
 
       {/* カテゴリタブ */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        <button 
-          onClick={() => setSelectedCategory('all')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap shadow-md transition ${selectedCategory === 'all' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          🔥 全て (注目)
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('favorites')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'favorites' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          ❤️ マーク済み ({favorites.length})
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('gourmet')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'gourmet' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          🍜 グルメ (Hot 20)
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('souvenir')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'souvenir' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          🎁 限定土産 (Hot 20)
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('stay')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'stay' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          🏨 宿泊・温泉 (Hot 20)
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('spot')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'spot' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          📸 観光名所 (Hot 20)
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('night')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'night' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          🌙 ナイト (すすきの・クラブ等)
-        </button>
-        <button 
-          onClick={() => setSelectedCategory('prep')}
-          className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === 'prep' ? 'bg-teal-400 text-slate-950 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
-        >
-          🧳 旅行準備・必用品
-        </button>
+        {[
+          { id: 'all', label: '🔥 全て (注目)' },
+          { id: 'favorites', label: `❤️ マーク済み (${favorites.length})` },
+          { id: 'gourmet', label: '🍜 グルメ (Hot 20)' },
+          { id: 'souvenir', label: '🎁 限定土産 (Hot 20)' },
+          { id: 'stay', label: '🏨 宿泊・温泉 (Hot 20)' },
+          { id: 'spot', label: '📸 観光名所 (Hot 20)' },
+          { id: 'night', label: '🌙 ナイト (すすきの・クラブ等)' },
+          { id: 'prep', label: '🧳 旅行準備・必用品' },
+        ].map((tab) => (
+          <button 
+            key={tab.id}
+            onClick={() => setSelectedCategory(tab.id)}
+            className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition ${selectedCategory === tab.id ? 'bg-teal-400 text-slate-950 font-bold shadow-md' : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800'}`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* メインレイアウト（左：動画一覧、右：AIコンシェルジュ） */}
@@ -171,7 +131,7 @@ export default function HomePage() {
             <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
               <span className="text-amber-400">🔥</span> ホット＆新着トレンド動画
             </h2>
-            <span className="text-xs text-slate-500">{filteredVideos.length} 件</span>
+            <span className="text-xs text-slate-500">214 件</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -193,8 +153,9 @@ export default function HomePage() {
                       {video.id}
                     </div>
                     <button 
+                      type="button"
                       onClick={(e) => toggleFavorite(video.id, e)}
-                      className={`absolute top-2 right-2 p-1.5 rounded-full transition ${isFav ? 'text-red-500 bg-slate-950/80' : 'text-slate-300 bg-slate-950/50 hover:text-red-400'}`}
+                      className={`absolute top-2 right-2 p-1.5 rounded-full transition z-10 ${isFav ? 'text-red-500 bg-slate-950/90' : 'text-slate-300 bg-slate-950/50 hover:text-red-400'}`}
                     >
                       {isFav ? '❤️' : '🤍'}
                     </button>
@@ -210,7 +171,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 右側：AIトラベルコンシェルジュパネル（マーク連動ルート作成機能付き） */}
+        {/* 右側：AIトラベルコンシェルジュパネル */}
         <div className="space-y-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
             <div className="space-y-1">
@@ -222,47 +183,39 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* マークした動画でルート作成するオプション */}
-            <div className="bg-teal-500/10 border border-teal-500/30 rounded-xl p-3 space-y-2">
-              <label className="flex items-center gap-2 text-xs text-teal-300 font-bold cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={useFavoritesForRoute}
-                  onChange={(e) => setUseFavoritesForRoute(e.target.checked)}
-                  className="rounded border-slate-700 bg-slate-950 text-teal-400" 
-                />
-                <span>❤️ マークした動画 ({favorites.length}件) でルートを作成</span>
-              </label>
-              <p className="text-[10px] text-slate-400 pl-5">
-                チェックを入れると、お気に入りに登録したスポットを優先して周遊ルートを組み立てます。
-              </p>
-            </div>
-
             <div className="space-y-2">
               <span className="text-xs font-bold text-slate-300 block">1. 出発・観光エリアを選択</span>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-teal-500/20 border border-teal-500 text-teal-300 font-bold">
-                  道央<span className="block text-[9px] text-slate-400 font-normal">札幌・小樽・千歳・定山渓</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400">
-                  道南<span className="block text-[9px] text-slate-600 font-normal">函館・登別・洞爺</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400">
-                  道北<span className="block text-[9px] text-slate-600 font-normal">富良野・美瑛・旭川・稚内</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400">
-                  道東<span className="block text-[9px] text-slate-600 font-normal">十勝・帯広・釧路・知床・網走</span>
-                </div>
+                {[
+                  { name: '道央', sub: '札幌・小樽・千歳・定山渓' },
+                  { name: '道南', sub: '函館・登別・洞爺' },
+                  { name: '道北', sub: '富良野・美瑛・旭川・稚内' },
+                  { name: '道東', sub: '十勝・帯広・釧路・知床・網走' },
+                ].map((area) => (
+                  <div 
+                    key={area.name}
+                    onClick={() => setSelectedArea(area.name)}
+                    className={`p-2.5 rounded-xl border cursor-pointer transition ${selectedArea === area.name ? 'bg-teal-500/20 border-teal-500 text-teal-300 font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}`}
+                  >
+                    {area.name}
+                    <span className="block text-[9px] font-normal opacity-70">{area.sub}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="space-y-2">
               <span className="text-xs font-bold text-slate-300 block">2. ツアー 滞在時間</span>
               <div className="grid grid-cols-4 gap-2 text-xs">
-                <button className="py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">2時間</button>
-                <button className="py-2 rounded-xl bg-teal-400 text-slate-950 font-bold">4時間</button>
-                <button className="py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">6時間</button>
-                <button className="py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">🌙 夜だけ</button>
+                {['2時間', '4時間', '6時間', '🌙 夜だけ'].map((duration) => (
+                  <button 
+                    key={duration}
+                    onClick={() => setSelectedDuration(duration)}
+                    className={`py-2 rounded-xl border transition ${selectedDuration === duration ? 'bg-teal-400 text-slate-950 font-bold border-teal-400' : 'bg-slate-950 border-slate-800 text-slate-300'}`}
+                  >
+                    {duration}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -272,18 +225,16 @@ export default function HomePage() {
             </div>
 
             <button 
-              onClick={handleGenerateRoute}
-              className="w-full py-3 bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 hover:opacity-90 transition text-xs flex items-center justify-center gap-2"
+              onClick={() => setRouteGenerated(true)}
+              className="w-full py-3 bg-gradient-to-r from-teal-400 to-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-teal-500/20 hover:opacity-90 transition text-xs flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>🚀 周遊ツアールートを自動生成</span>
             </button>
 
             {routeGenerated && (
-              <div className="bg-teal-500/20 border border-teal-500 text-teal-300 p-3 rounded-xl text-xs space-y-1 animate-pulse">
-                <p className="font-bold">✨ ルートが正常に生成されました！</p>
-                <p className="text-[10px] text-slate-300">
-                  {useFavoritesForRoute ? `マークした${favorites.length}件のスポットを巡る最適ルートです。` : '選択された条件に基づいた最適ルートです。'}
-                </p>
+              <div className="bg-teal-500/20 border border-teal-500 text-teal-300 p-3 rounded-xl text-xs space-y-1">
+                <p className="font-bold">✨ {selectedArea} ({selectedDuration}) ルート作成完了</p>
+                <p className="text-[10px] text-slate-300">選択された条件に基づく最適周遊プランを構築しました。</p>
               </div>
             )}
           </div>
