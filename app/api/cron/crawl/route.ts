@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET() {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   
   if (!SUPABASE_URL) {
     return NextResponse.json({ success: false, error: 'Supabase URLが設定されていません。' }, { status: 400 });
