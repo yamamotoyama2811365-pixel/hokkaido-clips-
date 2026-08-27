@@ -604,7 +604,7 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
 
-        {/* トップの広告枠 */}
+        {/* 🌟 トップの広告枠：横幅いっぱい（フルサイズ）に配置 */}
         <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center shadow-xl no-print">
           <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
           <div className="flex justify-center items-center">
@@ -909,7 +909,7 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル（AIコンシェルジュ ＋ 広告スペース） */}
+          {/* 右側パネル（AIコンシェルジュ ＋ 2つ目の広告スペース埋め） */}
           <div className="w-full lg:w-[420px] lg:sticky lg:top-20 space-y-5 flex-shrink-0 no-print">
             
             {bookmarkedSpots.length > 0 && (
@@ -1006,7 +1006,7 @@ export default function HokkaidoTravelApp() {
               </button>
             </div>
 
-            {/* 右側のGoogle AdSense広告枠 */}
+            {/* 🌟 右側の空きスペースを埋める2つ目のGoogle AdSense広告枠 */}
             <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden">
               <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center min-h-[150px]">
