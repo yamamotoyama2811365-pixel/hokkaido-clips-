@@ -57,36 +57,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   "防寒グッズ": ["防寒", "ヒートテック", "スノーブーツ", "滑り止め", "手袋", "カイロ"],
 };
 
-const CAMPAIGN_BANNERS = [
-  {
-    id: "his-sale",
-    tag: "🔥 HIS限定セール",
-    title: "HIS 北海道ツアー大感謝祭！往復航空券＋ホテル",
-    sub: "2泊3日 19,800円〜！レンタカー付きプランも対象",
-    image: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
-    link: "https://www.his-j.com/kokunai/kanto/tour/hokkaido/",
-    badge: "期間限定 最大40%OFF",
-  },
-  {
-    id: "jtb-coupon",
-    tag: "🏨 JTB厳選",
-    title: "JTB 露天風呂付き客室＆高級温泉旅館特集",
-    sub: "登別・定山渓・洞爺湖の極上宿で使える限定クーポン配布中",
-    image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&auto=format&fit=crop&q=80",
-    link: "https://www.jtb.co.jp/kokunai/hokkaido/",
-    badge: "早期予約クーポン有",
-  },
-  {
-    id: "rakuten-pack",
-    tag: "✈️ 楽天トラベル",
-    title: "航空券＋宿 楽パック！ポイント最大15倍還元",
-    sub: "JAL・ANA便を自由に組み合わせ！直前予約もOK",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&auto=format&fit=crop&q=80",
-    link: "https://travel.rakuten.co.jp/package/",
-    badge: "ポイント還元",
-  }
-];
-
 const TRAVEL_GEAR_SPOTS: SpotItem[] = [
   {
     id: "gear-1",
@@ -635,13 +605,13 @@ export default function HokkaidoTravelApp() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6">
 
-        {/* Google AdSense 横バナー広告エリア */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 text-center overflow-hidden shadow-xl no-print">
-          <p className="text-[10px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
-          <div className="flex justify-center">
+        {/* 🌟 トップの広告枠：左側（動画一覧側）の幅だけに収まるように調整 */}
+        <div className="w-full max-w-[940px] bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 mb-6 text-center max-h-[120px] overflow-hidden shadow-xl no-print">
+          <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
+          <div className="flex justify-center items-center">
             <ins
               className="adsbygoogle"
-              style={{ display: "block", minWidth: "250px", width: "100%" }}
+              style={{ display: "block", minWidth: "250px", width: "100%", maxHeight: "90px" }}
               data-ad-client="ca-pub-5776658615046901"
               data-ad-slot="6392139179"
               data-ad-format="auto"
@@ -682,38 +652,6 @@ export default function HokkaidoTravelApp() {
               >
                 すすきの夜遊び情報を探す ➔
               </a>
-            </div>
-          </div>
-        )}
-
-        {/* 一般旅行セールバナー */}
-        {selectedGenre !== "night" && (
-          <div className="mb-6 space-y-2.5 no-print">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-black text-amber-300 tracking-wider">
-                <span>⚡</span> <span>今週の北海道旅行セール速報（航空券＋宿セット割）</span>
-              </div>
-              <span className="text-[10px] text-slate-400">PR</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-              {CAMPAIGN_BANNERS.map((banner) => (
-                <a
-                  key={banner.id}
-                  href={banner.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative rounded-2xl overflow-hidden border border-slate-800 hover:border-teal-400/80 shadow-xl p-4 bg-slate-900 min-h-[120px] flex flex-col justify-end"
-                >
-                  <img src={banner.image} alt={banner.title} className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:scale-105 transition duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
-                  <div className="relative z-10">
-                    <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 mb-1 inline-block">{banner.tag}</span>
-                    <h3 className="font-extrabold text-xs text-white group-hover:text-teal-200 transition line-clamp-1">{banner.title}</h3>
-                    <p className="text-[10px] text-slate-300 line-clamp-1">{banner.sub}</p>
-                  </div>
-                </a>
-              ))}
             </div>
           </div>
         )}
@@ -1001,7 +939,7 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル */}
+          {/* 右側パネル（AIコンシェルジュが綺麗に上に配置されます） */}
           <div className="w-full lg:w-[420px] lg:sticky lg:top-20 space-y-5 flex-shrink-0 no-print">
             
             {bookmarkedSpots.length > 0 && (
@@ -1252,7 +1190,7 @@ export default function HokkaidoTravelApp() {
         </div>
       )}
 
-      {/* 🎬 AIツアー生成中・完了モーダル（AdSense広告搭載版） */}
+      {/* 🎬 AIツアー生成中・完了モーダル */}
       {isGeneratingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in no-print">
           <div className="bg-slate-900 border border-teal-400/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_20px_60px_rgba(0,0,0,0.95)] relative space-y-6">
