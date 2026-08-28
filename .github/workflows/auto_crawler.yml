@@ -2,8 +2,8 @@ name: Daily YouTube Crawler
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 毎日UTC 0:00 (日本時間 9:00) に実行
-  workflow_dispatch:     # 手動実行も可能にする
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   crawl:
@@ -13,10 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 22
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.x'
+
+      - name: Check Node version
+        run: node -v
 
       - name: Install dependencies
         run: npm install
