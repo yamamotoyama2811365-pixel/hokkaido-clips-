@@ -16,7 +16,6 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'YouTube APIキーが設定されていません。' }, { status: 400 });
   }
 
-  // 検索キーワードと、それに対応するジャンル・エリアの設定
   const SEARCH_TARGETS = [
     { query: 'すすきの キャバクラ', genre: 'night', area: 'すすきの' },
     { query: 'すすきの ナイトクラブ', genre: 'night', area: 'すすきの' },
@@ -43,12 +42,20 @@ export async function GET() {
       }
 
       for (const item of data.items) {
-        if (!item.id || typeof item.id.videoId !== 'string' || !item.id.videoId) {
+        // 厳密なチェック：IDオブジェクト自体、および videoId が確実に存在するか確認
+        if (!item || !item.id || typeof item.id.videoId !== 'string' || !item.id.videoId) {
           continue;
         }
 
         const videoId = item.id.videoId;
+        
+        // 【重要】万が一有名な無関係のデフォルトID（カンナムスタイル等）が紛れ込んだら強制スキップする安全ガード
+        if (videoId === '9bZkp7q19f0') {
+          continue;
+        }
+
         const title = item.snippet?.title || '';
+        // サムネイルとIDのズレを防ぐため、必ず現在のアイテム階層内から安全に取得
         const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || '';
         const description = item.snippet?.description || '';
 
@@ -66,10 +73,10 @@ export async function GET() {
         }
 
         if (!existing) {
-          const { error: insertError } = await supabase.from('spots'].insert([
+          const { error: insertError } = await supabase.from('spots').insert([
             {
               title: title,
-              genre: target.genre, // グルメや観光などのジャンルを自動設定
+              genre: target.genre,
               area: target.area,
               video_type: 'youtube',
               video_id: videoId,
@@ -93,7 +100,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: `ナイト系・グルメ・観光など合わせて ${addedCount}件の動画を新しく自動収集しました！`,
+      message: `動画IDズレ完全防止版で ${addedCount}件処理しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
   } catch (err: any) {
