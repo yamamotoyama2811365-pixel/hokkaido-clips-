@@ -16,20 +16,23 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'YouTube APIキーが設定されていません。' }, { status: 400 });
   }
 
-  const SEARCH_QUERIES = [
-    'すすきの キャバクラ',
-    'すすきの ナイトクラブ',
-    'すすきの スナック',
-    'KING XMHU 札幌'
+  // 検索キーワードと、それに対応するジャンル・エリアの設定
+  const SEARCH_TARGETS = [
+    { query: 'すすきの キャバクラ', genre: 'night', area: 'すすきの' },
+    { query: 'すすきの ナイトクラブ', genre: 'night', area: 'すすきの' },
+    { query: 'すすきの スナック', genre: 'night', area: 'すすきの' },
+    { query: 'KING XMHU 札幌', genre: 'night', area: 'すすきの' },
+    { query: '札幌 グルメ', genre: 'gourmet', area: '札幌' },
+    { query: '札幌 ランチ', genre: 'gourmet', area: '札幌' },
+    { query: '札幌 観光', genre: 'spot', area: '札幌' }
   ];
 
   let addedCount = 0;
   let errorLogs: string[] = [];
 
   try {
-    for (const query of SEARCH_QUERIES) {
-      // YouTube Data APIの検索用URL（動画オブジェクトを確実に絞り込む）
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`;
+    for (const target of SEARCH_TARGETS) {
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(target.query)}&type=video&key=${YOUTUBE_API_KEY}`;
       
       const res = await fetch(url);
       const data = await res.json();
@@ -40,20 +43,18 @@ export async function GET() {
       }
 
       for (const item of data.items) {
-        // 安全ガード：IDの構造が正しくないものはスキップ
         if (!item.id || typeof item.id.videoId !== 'string' || !item.id.videoId) {
           continue;
         }
 
         const videoId = item.id.videoId;
         const title = item.snippet?.title || '';
-        // サムネイルとIDの紐づけが狂わないよう、明示的にアイテムごとの高解像度画像を取得
         const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || '';
         const description = item.snippet?.description || '';
 
         if (!videoId || !title) continue;
 
-        // 既存チェック（同一の正確な video_id がすでに登録されていないか）
+        // 既存チェック
         const { data: existing, error: checkError } = await supabase
           .from('spots')
           .select('id')
@@ -61,24 +62,23 @@ export async function GET() {
           .maybeSingle();
 
         if (checkError) {
-          console.error('Check error:', checkError.message);
           continue;
         }
 
         if (!existing) {
-          const { error: insertError } = await supabase.from('spots').insert([
+          const { error: insertError } = await supabase.from('spots'].insert([
             {
               title: title,
-              genre: 'night',
-              area: 'すすきの',
+              genre: target.genre, // グルメや観光などのジャンルを自動設定
+              area: target.area,
               video_type: 'youtube',
               video_id: videoId,
               video_thumb: thumb,
               crowd_status: 'medium',
               crowd_text: '最新SNS動画・要チェック',
-              ai_summary: description ? description.slice(0, 100) + '...' : 'すすきののリアルなナイトライフがわかる最新動画。',
-              best_time: '21:00 〜 朝まで',
-              map_query: 'すすきの 札幌市中央区'
+              ai_summary: description ? description.slice(0, 100) + '...' : '現地のリアルな雰囲気がわかる最新動画。',
+              best_time: target.genre === 'night' ? '21:00 〜 朝まで' : '日中 〜 夜',
+              map_query: `${target.area} 札幌市`
             }
           ]);
 
@@ -93,7 +93,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: `${addedCount}件の動画IDズレ防止済みデータを処理しました！`,
+      message: `ナイト系・グルメ・観光など合わせて ${addedCount}件の動画を新しく自動収集しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
   } catch (err: any) {
