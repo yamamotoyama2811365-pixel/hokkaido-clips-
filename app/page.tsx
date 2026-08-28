@@ -358,16 +358,13 @@ export default function HokkaidoTravelApp() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      // データベースから取得したデータについて、再生実績のある定番の有効なYouTube動画ID（L_LUpnjgPso 等）に自動置換・クリーンアップして強制安定化
       const rawList = spotData && spotData.length > 0 ? spotData : [];
-      const cleanList = rawList.map((s: any, idx: number) => {
-        // 再生保証済みの信頼できる動画IDプール（北海道の旅行・Vlog系の有効な埋め込み用ID）
-        const verifiedIds = ["L_LUpnjgPso", "dQw4w9WgXcQ", "3JZ_D3ELwOQ", "9bZkp7q19f0", "jfKfPfyJRdk"];
-        const safeVideoId = verifiedIds[idx % verifiedIds.length];
-
+      
+      // 修正：データベース内の本物の video_id をそのまま使用するように変更
+      const cleanList = rawList.map((s: any) => {
         return {
           ...s,
-          video_id: safeVideoId,
+          video_id: s.video_id,
           video_type: "youtube" as VideoPlatform,
           map_query: cleanMapQuery(s.title, s.area),
           region: detectRegion(s),
