@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'YouTube APIキーが設定されていません。' }, { status: 400 });
   }
 
-  // ジンギスカン、スープカレー、宿、必需品などを含めた収集ターゲットリスト
+  // グルメ（ジンギスカン、スープカレーなど）、宿、旅の必需品を網羅した検索ターゲットリスト
   const SEARCH_TARGETS = [
     { query: 'すすきの キャバクラ', genre: 'night', area: 'すすきの' },
     { query: 'すすきの ナイトクラブ', genre: 'night', area: 'すすきの' },
@@ -76,7 +76,7 @@ export async function GET() {
         }
 
         if (!existing) {
-          const { error: insertError } = await supabase.from('spots'].insert([
+          const { error: insertError } = await supabase.from('spots').insert([
             {
               title: title,
               genre: target.genre,
