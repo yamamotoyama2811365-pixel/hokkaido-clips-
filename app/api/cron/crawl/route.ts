@@ -16,15 +16,20 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'YouTube APIキーが設定されていません。' }, { status: 400 });
   }
 
+  // ジンギスカン、スープカレー、宿、必需品などを含めた収集ターゲットリスト
   const SEARCH_TARGETS = [
     { query: 'すすきの キャバクラ', genre: 'night', area: 'すすきの' },
     { query: 'すすきの ナイトクラブ', genre: 'night', area: 'すすきの' },
     { query: 'すすきの スナック', genre: 'night', area: 'すすきの' },
     { query: 'KING XMHU 札幌', genre: 'night', area: 'すすきの' },
-    { query: '札幌 グルメ', genre: 'gourmet', area: '札幌' },
-    { query: '札幌 居酒屋', genre: 'gourmet', area: '札幌' },
-    { query: '札幌 ランチ', genre: 'gourmet', area: '札幌' },
-    { query: '札幌 観光', genre: 'spot', area: '札幌' }
+    { query: '札幌 ジンギスカン', genre: 'gourmet', area: '札幌' },
+    { query: '札幌 スープカレー', genre: 'gourmet', area: '札幌' },
+    { query: '札幌 ラーメン', genre: 'gourmet', area: '札幌' },
+    { query: '札幌 グルメ ランチ', genre: 'gourmet', area: '札幌' },
+    { query: '定山渓 温泉 宿泊', genre: 'stay', area: '道央' },
+    { query: '札幌 ホテル おすすめ', genre: 'stay', area: '札幌' },
+    { query: '北海道旅行 持ち物 必需品', genre: 'travel_gear', area: '北海道' },
+    { query: '札幌 観光 スポット', genre: 'spot', area: '札幌' }
   ];
 
   let addedCount = 0;
@@ -43,20 +48,16 @@ export async function GET() {
       }
 
       for (const item of data.items) {
-        // 修正ポイント：IDのオブジェクト構造を完全に分解して、個々のアイテムのIDを正確に特定する
-        // これにより、配列全体からIDを誤って取得するバグを防ぎます。
         if (!item || !item.id || typeof item.id.videoId !== 'string' || !item.id.videoId) {
           continue;
         }
 
         const videoId = item.id.videoId;
 
-        // 万が一の無関係なID（カンナムスタイル等）のデフォルト混入も完全に弾く強力ガード
         if (videoId === '9bZkp7q19f0' || videoId.length < 5) {
           continue;
         }
 
-        // タイトル、サムネイルも現在のアイテムから正確に抽出
         const title = item.snippet?.title || '';
         const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || '';
         const description = item.snippet?.description || '';
@@ -75,7 +76,7 @@ export async function GET() {
         }
 
         if (!existing) {
-          const { error: insertError } = await supabase.from('spots').insert([
+          const { error: insertError } = await supabase.from('spots'].insert([
             {
               title: title,
               genre: target.genre,
@@ -102,7 +103,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: `全動画ID不一致完全修正版により ${addedCount}件の動画を正しく登録しました！`,
+      message: `一括追加クローラーにより ${addedCount}件の動画を新しく登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
   } catch (err: any) {
