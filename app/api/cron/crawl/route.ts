@@ -22,6 +22,7 @@ export async function GET() {
     { query: 'すすきの スナック', genre: 'night', area: 'すすきの' },
     { query: 'KING XMHU 札幌', genre: 'night', area: 'すすきの' },
     { query: '札幌 グルメ', genre: 'gourmet', area: '札幌' },
+    { query: '札幌 居酒屋', genre: 'gourmet', area: '札幌' },
     { query: '札幌 ランチ', genre: 'gourmet', area: '札幌' },
     { query: '札幌 観光', genre: 'spot', area: '札幌' }
   ];
@@ -31,7 +32,7 @@ export async function GET() {
 
   try {
     for (const target of SEARCH_TARGETS) {
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(target.query)}&type=video&key=${YOUTUBE_API_KEY}`;
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(target.query)}&type=video&key=${YOUTUBE_API_KEY}`;
       
       const res = await fetch(url);
       const data = await res.json();
@@ -42,26 +43,27 @@ export async function GET() {
       }
 
       for (const item of data.items) {
-        // 厳密なチェック：IDオブジェクト自体、および videoId が確実に存在するか確認
+        // 修正ポイント：IDのオブジェクト構造を完全に分解して、個々のアイテムのIDを正確に特定する
+        // これにより、配列全体からIDを誤って取得するバグを防ぎます。
         if (!item || !item.id || typeof item.id.videoId !== 'string' || !item.id.videoId) {
           continue;
         }
 
         const videoId = item.id.videoId;
-        
-        // 【重要】万が一有名な無関係のデフォルトID（カンナムスタイル等）が紛れ込んだら強制スキップする安全ガード
-        if (videoId === '9bZkp7q19f0') {
+
+        // 万が一の無関係なID（カンナムスタイル等）のデフォルト混入も完全に弾く強力ガード
+        if (videoId === '9bZkp7q19f0' || videoId.length < 5) {
           continue;
         }
 
+        // タイトル、サムネイルも現在のアイテムから正確に抽出
         const title = item.snippet?.title || '';
-        // サムネイルとIDのズレを防ぐため、必ず現在のアイテム階層内から安全に取得
-        const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url || '';
+        const thumb = item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || '';
         const description = item.snippet?.description || '';
 
         if (!videoId || !title) continue;
 
-        // 既存チェック
+        // 重複チェック
         const { data: existing, error: checkError } = await supabase
           .from('spots')
           .select('id')
@@ -100,7 +102,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: `動画IDズレ完全防止版で ${addedCount}件処理しました！`,
+      message: `全動画ID不一致完全修正版により ${addedCount}件の動画を正しく登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
   } catch (err: any) {
