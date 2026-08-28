@@ -270,17 +270,16 @@ export default function HokkaidoTravelApp() {
   const [isAdCompleted, setIsAdCompleted] = useState(false);
 
   const planSectionRef = useRef<HTMLDivElement>(null);
-  const detailPanelRef = useRef<HTMLDivElement>(null); // スマホ用自動スクロール先の参照
+  const activeVideoCardRef = useRef<HTMLDivElement>(null); // 動画プレイヤーを含む詳細カード自体の参照に変更
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
-  // スポット選択時にスマホなら自動で詳細パネルへスクロールする関数
   const handleSelectSpot = (spot: SpotItem) => {
     setActiveSpot(spot);
     setTimeout(() => {
-      if (detailPanelRef.current && window.innerWidth < 1024) {
-        detailPanelRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (activeVideoCardRef.current) {
+        activeVideoCardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 100);
+    }, 120);
   };
 
   useEffect(() => {
@@ -558,32 +557,34 @@ export default function HokkaidoTravelApp() {
 
       {/* ブランドヘッダー */}
       <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
-        <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-3 flex items-center justify-between gap-3">
+        <div className="w-full max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2.5">
           
-          <div className="flex items-center gap-3 md:gap-3.5 group cursor-pointer" onClick={() => { setSelectedGenre("all"); setSearchKeyword(""); }}>
-            <div className="relative w-11 h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-[14px] bg-gradient-to-tr from-cyan-500 via-teal-400 to-indigo-500 p-[1.5px] shadow-[0_4px_20px_rgba(45,212,191,0.35)] group-hover:scale-105 transition-all duration-300">
-              <div className="w-full h-full bg-gradient-to-b from-slate-900 to-slate-950 rounded-[12.5px] flex items-center justify-center relative overflow-hidden">
-                <div className="w-6 h-6 rounded-full bg-teal-400/20 flex items-center justify-center text-teal-300 font-black text-sm">▶</div>
+          <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 group cursor-pointer" onClick={() => { setSelectedGenre("all"); setSearchKeyword(""); }}>
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center rounded-[14px] bg-gradient-to-tr from-cyan-500 via-teal-400 to-indigo-500 p-[1.5px] shadow-[0_4px_20px_rgba(45,212,191,0.35)] group-hover:scale-105 transition-all duration-300">
+                <div className="w-full h-full bg-gradient-to-b from-slate-900 to-slate-950 rounded-[12.5px] flex items-center justify-center relative overflow-hidden">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-400/20 flex items-center justify-center text-teal-300 font-black text-xs sm:text-sm">▶</div>
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <span className="font-black text-base sm:text-lg md:text-xl tracking-wider text-white">
-                  HOKKAIDO <span className="bg-gradient-to-r from-teal-300 via-cyan-400 to-sky-400 bg-clip-text text-transparent">CLIPS</span>
-                </span>
-                <span className="px-1.5 py-0.5 rounded-md bg-teal-950/80 border border-teal-500/40 text-[9px] font-black text-teal-300">APP</span>
-              </div>
-              <div className="text-[10px] md:text-[11px] font-bold text-slate-300">
-                <span>ショート動画</span> <span className="text-teal-400">×</span> <span>AIトラベルコンシェルジュ</span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="font-black text-sm sm:text-lg md:text-xl tracking-wider text-white">
+                    HOKKAIDO <span className="bg-gradient-to-r from-teal-300 via-cyan-400 to-sky-400 bg-clip-text text-transparent">CLIPS</span>
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded-md bg-teal-950/80 border border-teal-500/40 text-[8px] sm:text-[9px] font-black text-teal-300">APP</span>
+                </div>
+                <div className="text-[9px] sm:text-[11px] font-bold text-slate-300">
+                  <span>ショート動画</span> <span className="text-teal-400">×</span> <span>AIトラベルコンシェルジュ</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="w-full sm:w-auto flex items-center justify-end gap-2 overflow-x-auto no-scrollbar py-0.5">
             <button
               onClick={() => setSelectedGenre("bookmarks")}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold flex items-center gap-1 whitespace-nowrap transition ${
                 selectedGenre === "bookmarks" ? "bg-rose-500/20 text-rose-300 border-rose-500/50" : "bg-slate-900 border-slate-700 text-slate-300 hover:text-white"
               }`}
             >
@@ -593,7 +594,7 @@ export default function HokkaidoTravelApp() {
             <select
               value={currentLang}
               onChange={(e) => handleLanguageChange(e.target.value)}
-              className="bg-slate-900 text-slate-200 border border-slate-700/80 text-xs font-bold py-2 px-2.5 rounded-xl outline-none cursor-pointer"
+              className="bg-slate-900 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2 rounded-xl outline-none cursor-pointer whitespace-nowrap"
             >
               <option value="ja">🇯🇵 日本語</option>
               <option value="en">🇺🇸 English</option>
@@ -604,23 +605,22 @@ export default function HokkaidoTravelApp() {
 
             <button 
               onClick={() => startGeneratingWithAd(false)}
-              className="text-xs bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 text-white font-extrabold px-3.5 md:px-4 py-2 rounded-xl shadow-lg flex items-center gap-1.5"
+              className="text-[11px] sm:text-xs bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-400 text-white font-extrabold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-1 whitespace-nowrap"
             >
-              <span>🤖</span> <span>AIツアー自動作成</span>
+              <span>🤖</span> <span>AIツアー作成</span>
             </button>
           </div>
 
         </div>
       </header>
 
-      {/* 🌟 メインの全体コンテナ */}
+      {/* メインの全体コンテナ */}
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
             
-            {/* ページ最上部の広告枠 */}
             <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl overflow-hidden no-print">
               <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center overflow-hidden max-h-[90px]">
@@ -642,7 +642,6 @@ export default function HokkaidoTravelApp() {
               </div>
             </div>
 
-            {/* 検索バー */}
             <div className="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 no-print">
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 text-slate-400 text-sm">🔍</span>
@@ -687,7 +686,6 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            {/* カテゴリ切り替え */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 no-print">
               {[
                 { id: "all", label: "🔥 全て (注目)" },
@@ -718,7 +716,6 @@ export default function HokkaidoTravelApp() {
               ))}
             </div>
 
-            {/* AIツアールート表示枠 */}
             {generatedPlan && (
               <div ref={planSectionRef} className="print-area p-5 md:p-6 bg-slate-900/95 rounded-2xl border border-teal-500/50 shadow-2xl space-y-5 scroll-mt-24">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
@@ -866,7 +863,6 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            {/* 動画一覧グリッド */}
             <div className="no-print">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">
@@ -936,8 +932,8 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル（詳細カードに ref={detailPanelRef} を設定） */}
-          <div ref={detailPanelRef} className="w-full lg:w-[420px] space-y-5 flex-shrink-0 no-print scroll-mt-20">
+          {/* 右側パネル内（AIコンシェルジュの下にある「詳細カード」自体に ref を割り当て） */}
+          <div className="w-full lg:w-[420px] space-y-5 flex-shrink-0 no-print">
             
             {bookmarkedSpots.length > 0 && (
               <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40 shadow-xl space-y-3">
@@ -1033,7 +1029,6 @@ export default function HokkaidoTravelApp() {
               </button>
             </div>
 
-            {/* 右側のGoogle AdSense広告枠 */}
             <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-center shadow-xl overflow-hidden max-h-[220px]">
               <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center overflow-hidden max-h-[150px]">
@@ -1056,7 +1051,7 @@ export default function HokkaidoTravelApp() {
             </div>
 
             {activeSpot && (
-              <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
+              <div ref={activeVideoCardRef} className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl scroll-mt-20">
                 <div className="relative aspect-video bg-black">
                   <MultiVideoPlayer key={activeSpot.id} spot={activeSpot} />
                 </div>
