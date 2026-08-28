@@ -270,7 +270,18 @@ export default function HokkaidoTravelApp() {
   const [isAdCompleted, setIsAdCompleted] = useState(false);
 
   const planSectionRef = useRef<HTMLDivElement>(null);
+  const detailPanelRef = useRef<HTMLDivElement>(null); // スマホ用自動スクロール先の参照
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+
+  // スポット選択時にスマホなら自動で詳細パネルへスクロールする関数
+  const handleSelectSpot = (spot: SpotItem) => {
+    setActiveSpot(spot);
+    setTimeout(() => {
+      if (detailPanelRef.current && window.innerWidth < 1024) {
+        detailPanelRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+  };
 
   useEffect(() => {
     try {
@@ -483,7 +494,7 @@ export default function HokkaidoTravelApp() {
           clearInterval(interval);
           setIsAdCompleted(true);
           setGeneratedPlan(plan);
-          if (plan.length > 0) setActiveSpot(plan[0]);
+          if (plan.length > 0) handleSelectSpot(plan[0]);
           return 100;
         }
         return prev + 10;
@@ -605,12 +616,11 @@ export default function HokkaidoTravelApp() {
       {/* 🌟 メインの全体コンテナ */}
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        {/* 🌟 2カラムの左側（動画エリア）と完全に幅を合わせるため、下の検索窓と同じ親コンテナ内に上部広告を入れ込みます */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
           <div className="w-full lg:flex-1 space-y-6">
             
-            {/* 🌟 1. ページ最上部の広告枠（左側カラムの幅いっぱいにピタッと収まるように配置） */}
+            {/* ページ最上部の広告枠 */}
             <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-center shadow-xl overflow-hidden no-print">
               <p className="text-[9px] text-slate-500 mb-1 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center overflow-hidden max-h-[90px]">
@@ -662,7 +672,6 @@ export default function HokkaidoTravelApp() {
               </div>
             </div>
 
-            {/* ナイトタブ選択時の特別な案内（すすきのキャバクラ・スナック・音楽クラブ等） */}
             {selectedGenre === "night" && (
               <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/90 via-slate-900 to-pink-950/90 border border-purple-500/50 shadow-xl space-y-2 no-print">
                 <div className="flex items-center justify-between">
@@ -783,7 +792,7 @@ export default function HokkaidoTravelApp() {
                       </div>
 
                       <div 
-                        onClick={() => setActiveSpot(spot)}
+                        onClick={() => handleSelectSpot(spot)}
                         className={`p-4 rounded-xl border transition cursor-pointer ${
                           activeSpot?.id === spot.id 
                             ? "bg-slate-800/95 border-teal-400 shadow-lg ring-1 ring-teal-400" 
@@ -872,7 +881,7 @@ export default function HokkaidoTravelApp() {
                   return (
                     <React.Fragment key={spot.id}>
                       <div
-                        onClick={() => setActiveSpot(spot)}
+                        onClick={() => handleSelectSpot(spot)}
                         className={`group relative rounded-xl overflow-hidden bg-slate-900 border aspect-[9/16] cursor-pointer shadow transition ${
                           activeSpot?.id === spot.id ? "ring-2 ring-teal-400 border-transparent" : "border-slate-800 hover:border-slate-700"
                         }`}
@@ -927,8 +936,8 @@ export default function HokkaidoTravelApp() {
             </div>
           </div>
 
-          {/* 右側パネル（AIコンシェルジュ ＋ 広告スペース） */}
-          <div className="w-full lg:w-[420px] space-y-5 flex-shrink-0 no-print">
+          {/* 右側パネル（詳細カードに ref={detailPanelRef} を設定） */}
+          <div ref={detailPanelRef} className="w-full lg:w-[420px] space-y-5 flex-shrink-0 no-print scroll-mt-20">
             
             {bookmarkedSpots.length > 0 && (
               <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border border-rose-500/40 shadow-xl space-y-3">
@@ -1164,7 +1173,7 @@ export default function HokkaidoTravelApp() {
         </div>
       </div>
 
-      {/* 🎬 AIツアー生成中・完了モーダル */}
+      {/* AIツアー生成中・完了モーダル */}
       {isGeneratingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in no-print">
           <div className="bg-slate-900 border border-teal-400/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-[0_20px_60px_rgba(0,0,0,0.95)] relative space-y-6">
@@ -1186,7 +1195,6 @@ export default function HokkaidoTravelApp() {
               </p>
             </div>
 
-            {/* モーダル内のGoogle AdSense広告枠 */}
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center shadow-xl overflow-hidden">
               <p className="text-[9px] text-slate-500 mb-2 uppercase tracking-widest">スポンサーリンク</p>
               <div className="flex justify-center items-center min-h-[120px]">
