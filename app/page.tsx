@@ -41,7 +41,7 @@ const REGION_MAP: { id: AreaRegion; label: string; sub: string; keywords: string
   { id: "east", label: "道東", sub: "十勝・帯広・釧路・知床・網走", keywords: ["帯広", "十勝", "釧路", "知床", "網走", "阿寒", "摩周"] },
 ];
 
-const POPULAR_SEARCH_TAGS = ["ラーメン", "ジンギスカン", "スープカレー", "白い恋人", "ルタオ", "コーンパン", "夜パフェ", "温泉", "海鮮丼", "スーツケース", "防寒グッズ"];
+const POPULAR_SEARCH_TAGS = ["ジンギスカン", "スープカレー", "ラーメン", "白い恋人", "ルタオ", "夜パフェ", "温泉", "海鮮丼", "スーツケース", "防寒グッズ"];
 
 const SYNONYM_MAP: Record<string, string[]> = {
   "ラーメン": ["ラーメン", "らーめん", "麺", "信玄", "一幻", "拉麺", "ramen"],
@@ -156,7 +156,7 @@ function resolveSpecificSouvenirs(spot: Partial<SpotItem>): SouvenirItem[] {
     ];
   }
 
-  if (text.includes("スープカレー") || text.includes("garaku") || text.includes("suage") || text.includes("奥芝商店") || text.includes("ラマイ")) {
+  if (text.includes("スープカレー") || text.includes("garaku") || text.includes("suage") || text.includes("奥芝商店") || text.includes("ラマイ") || text.includes("カレー")) {
     return [
       {
         name: "名店監修『本格お土産用 レトルト スープカレーBOX』",
@@ -180,7 +180,7 @@ function resolveSpecificSouvenirs(spot: Partial<SpotItem>): SouvenirItem[] {
     ];
   }
 
-  if (text.includes("一幻") || text.includes("信玄") || text.includes("ラーメン")) {
+  if (text.includes("一幻") || text.includes("信玄") || text.includes("ラーメン") || text.includes("らーめん")) {
     return [
       {
         name: "銘店公認『お土産生ラーメンBOX（特製スープ付）』",
@@ -360,7 +360,6 @@ export default function HokkaidoTravelApp() {
 
       const rawList = spotData && spotData.length > 0 ? spotData : [];
       
-      // 修正：データベース内の本物の video_id をそのまま使用するように変更
       const cleanList = rawList.map((s: any) => {
         return {
           ...s,
@@ -403,17 +402,11 @@ export default function HokkaidoTravelApp() {
     return spots.filter((s) => bookmarkedIds.includes(s.id));
   }, [spots, bookmarkedIds]);
 
+  // 検索またはジャンル別のフィルタリング（DB全体の膨大なデータから完全にヒットさせる）
   const filteredSpots = useMemo(() => {
     let list = spots;
 
-    if (selectedGenre === "all" && !searchKeyword.trim()) {
-      list = spots.filter((s) => s.genre !== "travel_gear");
-    } else if (selectedGenre === "bookmarks") {
-      list = bookmarkedSpots;
-    } else if (selectedGenre !== "all" && !searchKeyword.trim()) {
-      list = list.filter((s) => s.genre === selectedGenre);
-    }
-
+    // 検索キーワードがある場合は、DB全体（1000件規模）から強力に部分一致検索
     if (searchKeyword.trim()) {
       const rawQ = searchKeyword.toLowerCase().trim();
       const targetKeywords = SYNONYM_MAP[searchKeyword] || [rawQ];
@@ -421,9 +414,17 @@ export default function HokkaidoTravelApp() {
       const scoredList = list
         .map((spot) => {
           let score = 0;
-          const titleLower = spot.title.toLowerCase();
+          const titleLower = (spot.title || "").toLowerCase();
+          const summaryLower = (spot.ai_summary || "").toLowerCase();
+          const areaLower = (spot.area || "").toLowerCase();
+          const genreLower = (spot.genre || "").toLowerCase();
+
           for (const kw of targetKeywords) {
-            if (titleLower.includes(kw.toLowerCase())) score += 100;
+            const kwL = kw.toLowerCase();
+            if (titleLower.includes(kwL)) score += 100;
+            if (summaryLower.includes(kwL)) score += 40;
+            if (areaLower.includes(kwL)) score += 30;
+            if (genreLower.includes(kwL)) score += 20;
           }
           return { spot, score };
         })
@@ -434,10 +435,20 @@ export default function HokkaidoTravelApp() {
       return scoredList;
     }
 
+    // 検索ワードがない場合のジャンルタブフィルター
+    if (selectedGenre === "all") {
+      list = spots.filter((s) => s.genre !== "travel_gear");
+    } else if (selectedGenre === "bookmarks") {
+      list = bookmarkedSpots;
+    } else {
+      list = list.filter((s) => s.genre === selectedGenre);
+    }
+
     return list;
   }, [spots, selectedGenre, searchKeyword, bookmarkedSpots]);
 
-  const displayedSpots = filteredSpots.slice(0, 20);
+  // トップページはスッキリ見せるため最大20件表示（検索時は全ヒットに対応）
+  const displayedSpots = searchKeyword.trim() ? filteredSpots : filteredSpots.slice(0, 20);
 
   const handleTagClick = (tag: string) => {
     if (searchKeyword === tag) {
@@ -652,7 +663,7 @@ export default function HokkaidoTravelApp() {
                     setSearchKeyword(e.target.value);
                     if (e.target.value) setSelectedGenre("all");
                   }}
-                  placeholder="店名、お土産名（白い恋人、ラーメン、スーツケース、防寒グッズなど）で検索..."
+                  placeholder="DB全体から検索（ジンギスカン、スープカレー、ラーメン、ホテル等）..."
                   className="w-full pl-10 pr-10 py-2.5 bg-slate-950 border border-slate-800 focus:border-teal-400 rounded-xl text-xs md:text-sm text-white placeholder:text-slate-500 outline-none"
                 />
               </div>
@@ -690,12 +701,12 @@ export default function HokkaidoTravelApp() {
               {[
                 { id: "all", label: "🔥 全て (注目)" },
                 { id: "bookmarks", label: `❤️ マーク済み (${bookmarkedIds.length})` },
-                { id: "food", label: "🍜 グルメ (Hot 20)" },
-                { id: "souvenir", label: "🎁 限定土産 (Hot 20)" },
-                { id: "stay", label: "🏨 宿泊・温泉 (Hot 20)" },
-                { id: "spot", label: "🏔️ 観光名所 (Hot 20)" },
-                { id: "night", label: "🌙 ナイト (すすきの・クラブ等)" },
-                { id: "travel_gear", label: "🧳 旅行準備・必需品" },
+                { id: "food", label: "🍜 グルメ (厳選TOP)" },
+                { id: "souvenir", label: "🎁 限定土産" },
+                { id: "stay", label: "🏨 宿泊・温泉" },
+                { id: "spot", label: "🏔️ 観光名所" },
+                { id: "night", label: "🌙 ナイト" },
+                { id: "travel_gear", label: "🧳 旅行準備" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -866,9 +877,9 @@ export default function HokkaidoTravelApp() {
             <div className="no-print">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">
-                  {selectedGenre === "night" ? "🌙 すすきの ナイト＆エンタメ動画（キャバクラ・スナック・音楽クラブ）" : selectedGenre === "all" ? "🔥 ホット＆新着トレンド動画" : `${selectedGenre.toUpperCase()} おすすめTOP20`}
+                  {searchKeyword ? `🔍 検索結果 (${filteredSpots.length}件)` : selectedGenre === "night" ? "🌙 すすきの ナイト＆エンタメ動画" : selectedGenre === "all" ? "🔥 ホット＆新着トレンド動画 (TOP20)" : `${selectedGenre.toUpperCase()} おすすめ動画`}
                 </h2>
-                <span className="text-xs text-slate-500">{filteredSpots.length} 件</span>
+                <span className="text-xs text-slate-500">DB総数: {spots.length} 件</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
