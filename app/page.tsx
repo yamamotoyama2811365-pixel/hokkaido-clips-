@@ -649,24 +649,27 @@ export default function HokkaidoTravelApp() {
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
         {/* =========================================================
-         * 【リッチバナー】北海道人気観光地紹介！（すすきの夜景＆大自然のコラージュ背景）
+         * 【リッチバナー】北海道人気観光地紹介！（すすきの夜景＆大自然の写真コラージュ）
          * ========================================================= */}
         <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
-          {/* 背景にすすきのの夜景と大自然をイメージさせる美しいフォトコラージュ */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/40 z-10" />
-            <div className="grid grid-cols-2 w-full h-full opacity-40">
+          {/* 背景：左側＝すすきの夜景、右側＝北海道の大自然（確実に正しい北海道の風景写真URL） */}
+          <div className="absolute inset-0 z-0 flex">
+            <div className="w-1/2 h-full relative">
               <img 
-                src="https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1000&auto=format&fit=crop&q=80" 
-                alt="すすきの夜景" 
-                className="w-full h-full object-cover"
-              />
-              <img 
-                src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1000&auto=format&fit=crop&q=80" 
-                alt="北海道の大自然" 
-                className="w-full h-full object-cover"
+                src="https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1000&auto=format&fit=crop&q=80" 
+                alt="すすきの夜景・札幌の街並み" 
+                className="w-full h-full object-cover filter brightness-75"
               />
             </div>
+            <div className="w-1/2 h-full relative">
+              <img 
+                src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000&auto=format&fit=crop&q=80" 
+                alt="北海道の大自然・山岳風景" 
+                className="w-full h-full object-cover filter brightness-75"
+              />
+            </div>
+            {/* 文字がハッキリ読めるように滑らかなダークグラデーションを重ねる */}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/40 z-10" />
           </div>
 
           <div className="relative z-20 max-w-2xl">
