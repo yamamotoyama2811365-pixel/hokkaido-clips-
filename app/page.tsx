@@ -47,30 +47,38 @@ interface BlogPost {
 }
 
 // ==========================================
-// 🛡️ 法律上安全かつ、各観光地に100%合致する専用高画質写真マップ＆取得関数（先頭で定義）
+// 🎯 各観光地に100%合致する厳選された美しい高画質写真マップ（絶対にズレない完全固定版）
 // ==========================================
-const AREA_EXACT_PHOTO_MAP: Record<string, string> = {
-  "旭川": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
+const PERFECT_AREA_PHOTOS: Record<string, string> = {
+  "旭川": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80", // 動物・冬景色
   "旭山": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
-  "定山渓": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80",
+  "定山渓": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80", // 温泉・渓谷
   "温泉": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80",
-  "富良野": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80",
-  "美瑛": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80",
-  "函館": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80",
-  "小樽": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80",
-  "札幌": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80",
+  "富良野": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・花畑
+  "美瑛": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・丘
+  "函館": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80", // 港町・夜景
+  "小樽": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80", // 運河・倉庫街
+  "札幌": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80", // 札幌・大通公園
   "大通": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80",
 };
 
-function getStrictThumbnail(post: BlogPost): string {
+function getGuaranteedPhoto(post: BlogPost): string {
   const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`;
 
-  for (const [keyword, photoUrl] of Object.entries(AREA_EXACT_PHOTO_MAP)) {
+  // 記事のエリアやタイトルに含まれるキーワードを優先的にチェックして正しい写真を返す
+  for (const [keyword, photoUrl] of Object.entries(PERFECT_AREA_PHOTOS)) {
     if (text.includes(keyword)) {
       return photoUrl;
     }
   }
 
+  // データベースに純粋なURLが綺麗に入っている場合のみそれを使用
+  const raw = post.thumbnail_url || "";
+  if (raw.startsWith("http") && !raw.includes("[") && !raw.includes("(") && !raw.includes("写真")) {
+    return raw;
+  }
+
+  // デフォルトの北海道の美しい風景
   return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
 }
 
@@ -797,7 +805,7 @@ export default function HokkaidoTravelApp() {
             {displayedBlogPosts.length > 0 ? (
               <div className="space-y-3">
                 {displayedBlogPosts.map((post) => {
-                  const strictPhoto = getStrictThumbnail(post);
+                  const guaranteedPhoto = getGuaranteedPhoto(post);
                   return (
                     <div 
                       key={post.id} 
@@ -807,7 +815,7 @@ export default function HokkaidoTravelApp() {
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
                           <img 
-                            src={strictPhoto} 
+                            src={guaranteedPhoto} 
                             alt={post.title_ja || post.title || "北海道観光"} 
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                           />
@@ -882,7 +890,7 @@ export default function HokkaidoTravelApp() {
 
               <div className="rounded-2xl overflow-hidden h-56 w-full bg-slate-950 border border-slate-800">
                 <img 
-                  src={getStrictThumbnail(selectedBlogPost)} 
+                  src={getGuaranteedPhoto(selectedBlogPost)} 
                   alt="サムネイル" 
                   className="w-full h-full object-cover"
                 />
