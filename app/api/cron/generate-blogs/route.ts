@@ -28,7 +28,6 @@ export async function GET() {
   let generatedCount = 0;
   let errorLogs: string[] = [];
 
-  // 各観光地に完璧にマッチする美しく多彩な高画質写真プール（純粋なURL文字列）
   function getSpotSpecificPhoto(area: string, title: string): string {
     const text = `${area} ${title}`.toLowerCase();
     if (text.includes("富良野") || text.includes("美瑛")) {
@@ -60,17 +59,15 @@ export async function GET() {
       const prompt = `
 あなたは北海道のプロのトラベルライターです。
 観光地「${spot.name}（エリア: ${spot.area}）」について、旅行者が思わず行きたくなるような魅力的なブログ記事を作成してください。
-以下のJSONフォーマット（マークダウンのコードブロックは不要、純粋なJSONのみ）で出力してください。
+必ず以下のJSONフォーマット（マークダウンのコードブロックは不要、純粋なJSONのみ）で出力してください。
 
 {
-  "title_ja": "特徴を含めた魅力的な日本語タイトル",
-  "content_ja": "H2見出しや段落を使った読みやすい日本語のブログ本文（HTMLタグやマークダウンで構成）",
-  
-  "title_en": "Attractive English title for SEO",
-  "content_en": "Engaging English blog post content with paragraphs and headings",
-  
-  "title_ko": "매력적인 한국어 블로그 제목",
-  "content_ko": "가독성이 좋은 한국어 블로그 본문 내용"
+  "title_ja": "日本語タイトル",
+  "content_ja": "日本語のブログ本文（HTMLタグ含む）",
+  "title_en": "English title for SEO",
+  "content_en": "English blog post content with HTML tags",
+  "title_ko": "한국어 블로그 제목",
+  "content_ko": "가독성이 좋은 한국어 블로그 본문 내용 (HTML 태그 포함)"
 }
       `;
 
@@ -106,19 +103,18 @@ export async function GET() {
 
       const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
-      const { error: insertError } = await supabase.from('blog_posts').insert([
+      // 正式な日本語テーブル名「ブログ記事」に対してインサート
+      const { error: insertError } = await supabase.from('ブログ記事').insert([
         {
           slug: slug,
           area: spot.area,
-          title_ja: parsedArticle.title_ja,
-          content_ja: parsedArticle.content_ja,
-          title_en: parsedArticle.title_en,
-          content_en: parsedArticle.content_en,
-          title_ko: parsedArticle.title_ko,
-          content_ko: parsedArticle.content_ko,
-          thumbnail_url: thumbnail_url,
-          source_name: "HOKKAIDO CLIPS 編集部 & AIトラベルエディター",
-          source_url: "[https://hokkaido-clips.com](https://hokkaido-clips.com)"
+          タイトル_ja: parsedArticle.title_ja,
+          コンテンツ_ja: parsedArticle.content_ja,
+          タイトル_en: parsedArticle.title_en,
+          コンテンツ_en: parsedArticle.content_en,
+          タイトル_ko: parsedArticle.title_ko,
+          コンテンツ_ko: parsedArticle.content_ko,
+          thumbnail_url: thumbnail_url
         }
       ]);
 
@@ -131,7 +127,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: `多言語ブログ記事を ${generatedCount}件 自動生成してデータベースに登録しました！`,
+      message: `「ブログ記事」テーブルに多言語ブログを ${generatedCount}件 登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
 
