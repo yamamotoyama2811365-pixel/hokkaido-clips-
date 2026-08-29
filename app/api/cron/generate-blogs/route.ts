@@ -103,8 +103,8 @@ export async function GET() {
 
       const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
-      // 正式な日本語テーブル名「ブログ記事」に対してインサート
-      const { error: insertError } = await supabase.from('ブログ記事').insert([
+      // テーブル名を 'blog_posts' に戻してインサート
+      const { error: insertError } = await supabase.from('blog_posts').insert([
         {
           slug: slug,
           area: spot.area,
@@ -127,7 +127,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: `「ブログ記事」テーブルに多言語ブログを ${generatedCount}件 登録しました！`,
+      message: `blog_posts テーブルに多言語ブログを ${generatedCount}件 登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
 
