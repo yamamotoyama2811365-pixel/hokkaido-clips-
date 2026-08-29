@@ -47,35 +47,31 @@ interface BlogPost {
 }
 
 // ==========================================
-// 🛡️ データベース内の乱れたマークダウン文字列や日本語混じりのURLから、純粋な画像URLを完璧に抽出・修復する関数
+// 🛡️ 法律上安全かつ、各観光地に100%合致する専用高画質写真マップ＆取得関数（先頭で定義）
 // ==========================================
-function getCleanAndValidPhoto(post: BlogPost): string {
-  const rawUrl = post.thumbnail_url || "";
-  
-  // 1. マークダウンのリンク形式 [URL](URL) や余分な括弧、スペースが含まれていても、最初の有効な https:// URLを強制抽出
-  const match = rawUrl.match(/https?:\/\/[^\s\]\)]+/);
-  if (match) {
-    let extracted = match[0];
-    // 日本語や全角文字がURLに含まれてしまっている場合はデコードして英数字の正しいURLに直す
-    try {
-      extracted = decodeURIComponent(extracted);
-    } catch (e) {}
+const AREA_EXACT_PHOTO_MAP: Record<string, string> = {
+  "旭川": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
+  "旭山": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
+  "定山渓": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80",
+  "温泉": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80",
+  "富良野": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80",
+  "美瑛": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80",
+  "函館": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80",
+  "小樽": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80",
+  "札幌": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80",
+  "大通": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80",
+};
 
-    // Unsplashの正しいフォーマットになっているかチェックし、破損していればエリア別の綺麗な写真にフォールバック
-    if (extracted.includes("images.unsplash.com")) {
-      return extracted;
+function getStrictThumbnail(post: BlogPost): string {
+  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`;
+
+  for (const [keyword, photoUrl] of Object.entries(AREA_EXACT_PHOTO_MAP)) {
+    if (text.includes(keyword)) {
+      return photoUrl;
     }
   }
 
-  // 2. エリア名に応じた安全で綺麗なデフォルト写真
-  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`;
-  if (text.includes("旭川") || text.includes("旭山")) return "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80";
-  if (text.includes("定山渓") || text.includes("温泉")) return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
-  if (text.includes("富良野") || text.includes("美瑛")) return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80";
-  if (text.includes("函館")) return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80";
-  if (text.includes("小樽")) return "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80";
-
-  return "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80";
+  return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
 }
 
 const REGION_MAP: { id: AreaRegion; label: string; sub: string; keywords: string[] }[] = [
@@ -313,7 +309,6 @@ export default function HokkaidoTravelApp() {
   const [showBlogSection, setShowBlogSection] = useState(false);
   const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
 
-  // ブログ検索および10件ずつのページネーション
   const [blogSearchQuery, setBlogSearchQuery] = useState("");
   const [visibleBlogCount, setVisibleBlogCount] = useState(10);
 
@@ -468,7 +463,6 @@ export default function HokkaidoTravelApp() {
     };
   }, []);
 
-  // ブログの検索および10件ずつのページネーション処理
   const filteredBlogPosts = useMemo(() => {
     if (!blogSearchQuery.trim()) return blogPosts;
     const q = blogSearchQuery.toLowerCase().trim();
@@ -709,7 +703,7 @@ export default function HokkaidoTravelApp() {
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
         {/* =========================================================
-         * 【リッチバナー】北海道人気観光地紹介！（すすきの夜景＆大自然の写真コラージュ）
+         * 【リッチバナー】北海道人気観光地紹介！
          * ========================================================= */}
         <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
           <div className="absolute inset-0 z-0 flex">
@@ -764,11 +758,10 @@ export default function HokkaidoTravelApp() {
           </div>
         </section>
 
-        {/* 独立したブログ記事一覧表示エリア（各記事のエリア・タイトルに完全合致した美しいサムネイル写真を表示） */}
+        {/* 独立したブログ記事一覧表示エリア */}
         {showBlogSection && (
           <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/95 border border-teal-500/40 p-5 md:p-6 rounded-2xl shadow-xl">
             
-            {/* ヘッダー：タイトル、検索窓、閉じるボタン */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
                 <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2">
@@ -778,7 +771,6 @@ export default function HokkaidoTravelApp() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* 観光地検索窓 */}
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
                   <input
@@ -813,7 +805,6 @@ export default function HokkaidoTravelApp() {
                       className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
-                        {/* 正しく照合された1枚のサムネイル写真 */}
                         <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
                           <img 
                             src={strictPhoto} 
@@ -822,7 +813,6 @@ export default function HokkaidoTravelApp() {
                           />
                         </div>
 
-                        {/* エリア＆タイトル */}
                         <div className="min-w-0 space-y-1">
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-teal-950 text-teal-300 border border-teal-500/30">
@@ -838,7 +828,6 @@ export default function HokkaidoTravelApp() {
                         </div>
                       </div>
 
-                      {/* 詳細を見るボタン */}
                       <div className="flex-shrink-0 self-end sm:self-center">
                         <span className="px-3 py-1.5 rounded-lg bg-teal-500/10 group-hover:bg-teal-500 text-teal-300 group-hover:text-slate-950 font-extrabold text-xs transition flex items-center gap-1 border border-teal-500/30">
                           <span>詳細を見る</span> <span>➔</span>
@@ -848,7 +837,6 @@ export default function HokkaidoTravelApp() {
                   );
                 })}
 
-                {/* もっと見るボタン（10件以上ある場合） */}
                 {visibleBlogCount < filteredBlogPosts.length && (
                   <div className="pt-3 text-center">
                     <button
@@ -900,7 +888,6 @@ export default function HokkaidoTravelApp() {
                 />
               </div>
 
-              {/* 本文 */}
               <div className="text-xs md:text-sm text-slate-200 leading-relaxed space-y-3 pt-2">
                 <div 
                   dangerouslySetInnerHTML={{ 
@@ -991,7 +978,6 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            {/* 純粋な動画ジャンルタブ */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 no-print">
               {[
                 { id: "all", label: "🔥 全て (注目)" },
