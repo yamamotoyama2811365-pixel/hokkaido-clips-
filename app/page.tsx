@@ -38,8 +38,12 @@ interface BlogPost {
   id: string;
   title?: string;
   title_ja?: string;
+  title_ko?: string;
+  title_en?: string;
   content?: string;
   content_ja?: string;
+  content_ko?: string;
+  content_en?: string;
   summary?: string;
   area?: string;
   thumbnail_url?: string;
@@ -47,43 +51,43 @@ interface BlogPost {
 }
 
 // ==========================================
-// 🎨 各観光地の雰囲気に完璧に一致する、絶対に間違えない厳選高画質写真リスト
+// 🎨 各観光地の雰囲気に完璧に一致する厳選高画質写真リスト（富良野・函館・小樽など完全網羅）
 // ==========================================
-function getDynamicSmartPhoto(post: BlogPost): string {
-  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`.toLowerCase();
+function getDynamicSmartPhoto(post: BlogPost, lang: string = "ja"): string {
+  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title_ko || ""} ${post.title_en || ""} ${post.title || ""}`.toLowerCase();
 
   // 1. 富良野・美瑛（ラベンダー・丘・大自然）
-  if (text.includes("富良野") || text.includes("美瑛") || text.includes("四季彩の丘") || text.includes("花")) {
+  if (text.includes("富良野") || text.includes("美瑛") || text.includes("후라노") || text.includes("비에이") || text.includes("furano") || text.includes("biei")) {
     return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80";
   }
 
   // 2. 旭川・旭山動物園（動物・雪景色・北国）
-  if (text.includes("旭川") || text.includes("旭山") || text.includes("動物園")) {
+  if (text.includes("旭川") || text.includes("旭山") || text.includes("動物園") || text.includes("아사히카와") || text.includes("asahikawa")) {
     return "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80";
   }
 
   // 3. 定山渓・温泉（渓谷・露天風呂・自然）
-  if (text.includes("定山渓") || text.includes("温泉") || text.includes("渓谷")) {
+  if (text.includes("定山渓") || text.includes("温泉") || text.includes("渓谷") || text.includes("조잔케이") || text.includes("온천") || text.includes("jozankei")) {
     return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
   }
 
   // 4. 函館（夜景・教会・異国情緒・港町）
-  if (text.includes("函館") || text.includes("夜景") || text.includes("ロープウェイ")) {
+  if (text.includes("函館") || text.includes("夜景") || text.includes("ロープウェイ") || text.includes("하코다테") || text.includes("hakodate")) {
     return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80";
   }
 
   // 5. 小樽（運河・レトロな倉庫・散策）
-  if (text.includes("小樽") || text.includes("運河")) {
+  if (text.includes("小樽") || text.includes("運河") || text.includes("오타루") || text.includes("otaru")) {
     return "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80";
   }
 
   // 6. 札幌・大通公園（テレビ塔・都会と自然の融合）
-  if (text.includes("札幌") || text.includes("大通公園") || text.includes("大通")) {
+  if (text.includes("札幌") || text.includes("大通公園") || text.includes("大通") || text.includes("삿포로") || text.includes("sapporo")) {
     return "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80";
   }
 
   // 7. グルメ全般（海鮮・ラーメン・スープカレーなど）
-  if (text.includes("グルメ") || text.includes("ラーメン") || text.includes("海鮮") || text.includes("スープカレー") || text.includes("ジンギスカン")) {
+  if (text.includes("グルメ") || text.includes("ラーメン") || text.includes("海鮮") || text.includes("スープカレー") || text.includes("ジンギスカン") || text.includes("맛집") || text.includes("라멘")) {
     return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop&q=80";
   }
 
@@ -350,22 +354,7 @@ export default function HokkaidoTravelApp() {
   useEffect(() => {
     try {
       const savedLang = localStorage.getItem("hk_lang_pref");
-      if (!savedLang && typeof navigator !== "undefined") {
-        const browserLang = (navigator.language || (navigator.languages && navigator.languages[0]) || "").toLowerCase();
-        let targetLang = "ja";
-
-        if (browserLang.startsWith("en")) targetLang = "en";
-        else if (browserLang.includes("tw") || browserLang.includes("hk")) targetLang = "zh-TW";
-        else if (browserLang.startsWith("zh")) targetLang = "zh-CN";
-        else if (browserLang.startsWith("ko")) targetLang = "ko";
-
-        if (targetLang !== "ja") {
-          setCurrentLang(targetLang);
-          document.cookie = `googtrans=/ja/${targetLang}; path=/;`;
-          document.cookie = `googtrans=/ja/${targetLang}; domain=.${window.location.hostname}; path=/;`;
-          localStorage.setItem("hk_lang_pref", targetLang);
-        }
-      } else if (savedLang) {
+      if (savedLang) {
         setCurrentLang(savedLang);
       }
     } catch (e) {}
@@ -397,23 +386,22 @@ export default function HokkaidoTravelApp() {
     try {
       localStorage.setItem("hk_lang_pref", langCode);
     } catch (err) {}
+  };
 
-    if (langCode === "ja") {
-      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=." + window.location.hostname + "; path=/;";
-      window.location.reload();
-      return;
-    }
+  // 多言語対応：現在の言語に応じたタイトルを取得
+  const getLocalizedTitle = (post: BlogPost) => {
+    if (currentLang === "ko" && post.title_ko) return post.title_ko;
+    if (currentLang === "en" && post.title_en) return post.title_en;
+    if (currentLang.startsWith("zh") && post.title_en) return post.title_en; // フォールバック
+    return post.title_ja || post.title || "無題のレポート";
+  };
 
-    const selectEl = document.querySelector(".goog-te-combo") as HTMLSelectElement;
-    if (selectEl) {
-      selectEl.value = langCode;
-      selectEl.dispatchEvent(new Event("change"));
-    } else {
-      document.cookie = `googtrans=/ja/${langCode}; path=/;`;
-      document.cookie = `googtrans=/ja/${langCode}; domain=.${window.location.hostname}; path=/;`;
-      window.location.reload();
-    }
+  // 多言語対応：現在の言語に応じた本文を取得
+  const getLocalizedContent = (post: BlogPost) => {
+    if (currentLang === "ko" && post.content_ko) return post.content_ko;
+    if (currentLang === "en" && post.content_en) return post.content_en;
+    if (currentLang.startsWith("zh") && post.content_en) return post.content_en;
+    return post.content_ja || post.content || "本文がありません。";
   };
 
   const fetchSpotsAndBlogs = async () => {
@@ -467,29 +455,18 @@ export default function HokkaidoTravelApp() {
 
   useEffect(() => {
     fetchSpotsAndBlogs();
-
-    (window as any).googleTranslateElementInit = () => {
-      new (window as any).google.translate.TranslateElement(
-        {
-          pageLanguage: "ja",
-          includedLanguages: "en,zh-TW,zh-CN,ko,ja",
-          autoDisplay: false,
-        },
-        "google_translate_element"
-      );
-    };
   }, []);
 
   const filteredBlogPosts = useMemo(() => {
     if (!blogSearchQuery.trim()) return blogPosts;
     const q = blogSearchQuery.toLowerCase().trim();
     return blogPosts.filter((post) => {
-      const title = (post.title_ja || post.title || "").toLowerCase();
+      const title = getLocalizedTitle(post).toLowerCase();
       const area = (post.area || "").toLowerCase();
-      const content = (post.content_ja || post.content || "").toLowerCase();
+      const content = getLocalizedContent(post).toLowerCase();
       return title.includes(q) || area.includes(q) || content.includes(q);
     });
-  }, [blogPosts, blogSearchQuery]);
+  }, [blogPosts, blogSearchQuery, currentLang]);
 
   const displayedBlogPosts = filteredBlogPosts.slice(0, visibleBlogCount);
 
@@ -648,14 +625,11 @@ export default function HokkaidoTravelApp() {
       <style jsx global>{`
         @media print {
           body { background-color: #fff !important; color: #000 !important; }
-          header, #google_translate_element, .no-print, .fixed, input, select, button:not(.print-include) { display: none !important; }
+          header, .no-print, .fixed, input, select, button:not(.print-include) { display: none !important; }
           .print-area { display: block !important; border: 1px solid #ccc !important; background: #fff !important; color: #000 !important; padding: 0 !important; }
           .print-area * { color: #000 !important; border-color: #ddd !important; background: transparent !important; }
         }
       `}</style>
-
-      <Script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
-      <div id="google_translate_element" className="hidden" />
 
       {/* ブランドヘッダー */}
       <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
@@ -693,16 +667,15 @@ export default function HokkaidoTravelApp() {
               <span>❤️</span> <span>マーク一覧 ({bookmarkedIds.length})</span>
             </button>
 
+            {/* 多言語切り替えセレクトボックス（データベースの各カラムと完全連動） */}
             <select
               value={currentLang}
               onChange={(e) => handleLanguageChange(e.target.value)}
               className="bg-slate-900 text-slate-200 border border-slate-700/80 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2 rounded-xl outline-none cursor-pointer whitespace-nowrap"
             >
               <option value="ja">🇯🇵 日本語</option>
-              <option value="en">🇺🇸 English</option>
-              <option value="zh-TW">🇹🇼 繁體中文</option>
-              <option value="zh-CN">🇨🇳 简体中文</option>
               <option value="ko">🇰🇷 한국어</option>
+              <option value="en">🇺🇸 English</option>
             </select>
 
             <button 
@@ -814,7 +787,8 @@ export default function HokkaidoTravelApp() {
             {displayedBlogPosts.length > 0 ? (
               <div className="space-y-3">
                 {displayedBlogPosts.map((post) => {
-                  const smartPhoto = getDynamicSmartPhoto(post);
+                  const smartPhoto = getDynamicSmartPhoto(post, currentLang);
+                  const title = getLocalizedTitle(post);
                   return (
                     <div 
                       key={post.id} 
@@ -825,7 +799,7 @@ export default function HokkaidoTravelApp() {
                         <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
                           <img 
                             src={smartPhoto} 
-                            alt={post.title_ja || post.title || "北海道観光"} 
+                            alt={title} 
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                           />
                         </div>
@@ -840,7 +814,7 @@ export default function HokkaidoTravelApp() {
                             </span>
                           </div>
                           <h3 className="font-bold text-xs sm:text-sm text-white truncate group-hover:text-teal-300 transition">
-                            {post.title_ja || post.title || "無題のレポート"}
+                            {title}
                           </h3>
                         </div>
                       </div>
@@ -883,7 +857,7 @@ export default function HokkaidoTravelApp() {
                     📍 {selectedBlogPost.area || "北海道全般"}
                   </span>
                   <h2 className="text-base md:text-xl font-black text-white mt-2 leading-snug">
-                    {selectedBlogPost.title_ja || selectedBlogPost.title}
+                    {getLocalizedTitle(selectedBlogPost)}
                   </h2>
                   <p className="text-[10px] text-slate-400 mt-1">
                     {selectedBlogPost.created_at ? new Date(selectedBlogPost.created_at).toLocaleDateString() : ""} 公開
@@ -899,7 +873,7 @@ export default function HokkaidoTravelApp() {
 
               <div className="rounded-2xl overflow-hidden h-56 w-full bg-slate-950 border border-slate-800">
                 <img 
-                  src={getDynamicSmartPhoto(selectedBlogPost)} 
+                  src={getDynamicSmartPhoto(selectedBlogPost, currentLang)} 
                   alt="サムネイル" 
                   className="w-full h-full object-cover"
                 />
@@ -908,7 +882,7 @@ export default function HokkaidoTravelApp() {
               <div className="text-xs md:text-sm text-slate-200 leading-relaxed space-y-3 pt-2">
                 <div 
                   dangerouslySetInnerHTML={{ 
-                    __html: selectedBlogPost.content_ja || selectedBlogPost.content || "本文がありません。" 
+                    __html: getLocalizedContent(selectedBlogPost)
                   }} 
                   className="prose prose-invert max-w-none text-xs md:text-sm leading-relaxed [&>h2]:text-teal-300 [&>h2]:text-base [&>h2]:font-bold [&>h2]:mt-4 [&>h2]:mb-2 [&>p]:mb-3"
                 />
