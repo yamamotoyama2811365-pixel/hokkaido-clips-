@@ -6,15 +6,21 @@ export async function GET() {
   const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
   
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    return NextResponse.json({ success: false, error: 'Supabaseの設定が不足しています。' }, { status: 400 });
-  }
-
-  if (!OPENAI_API_KEY) {
-    return NextResponse.json({ success: false, error: 'OpenAI APIキーが設定されていません。' }, { status: 400 });
+  if (!SUPABASE_URL || !SUPABASE_KEY || !OPENAI_API_KEY) {
+    return NextResponse.json({ success: false, error: '環境変数（SupabaseまたはOpenAI）が不足しています。' }, { status: 400 });
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // 毎回異なるシード値（ランダムな要素）を付与するためのバリエーション
+  const RANDOM_VARIATIONS = [
+    "初心者向けのモデルコースと穴場スポット",
+    "地元民だけが知るディープな魅力と最新トレンド",
+    "写真映えする絶景スポットと絶品グルメの完全ガイド",
+    "限られた時間でも大満足できる効率的な周遊プラン"
+  ];
+  
+  const currentVariation = RANDOM_VARIATIONS[Math.floor(Math.random() * RANDOM_VARIATIONS.length)];
 
   const TARGET_SPOTS = [
     { name: "札幌・大通公園", area: "札幌" },
@@ -28,53 +34,35 @@ export async function GET() {
   let generatedCount = 0;
   let errorLogs: string[] = [];
 
-  function getSpotSpecificPhoto(area: string, title: string): string {
-    const text = `${area} ${title}`.toLowerCase();
-    if (text.includes("富良野") || text.includes("美瑛")) {
-      return "https://placehold.co/800x600/f43f5e/ffffff?text=Furano+Biei";
-    }
-    if (text.includes("旭川") || text.includes("旭山")) {
-      return "https://placehold.co/800x600/f59e0b/ffffff?text=Asahiyama+Zoo";
-    }
-    if (text.includes("定山渓") || text.includes("温泉")) {
-      return "https://placehold.co/800x600/10b981/ffffff?text=Jozankei+Onsen";
-    }
-    if (text.includes("函館") || text.includes("夜景")) {
-      return "https://placehold.co/800x600/8b5cf6/ffffff?text=Hakodate+Night+View";
-    }
-    if (text.includes("小樽") || text.includes("運河")) {
-      return "https://placehold.co/800x600/0ea5e9/ffffff?text=Otaru+Canal";
-    }
-    if (text.includes("札幌") || text.includes("大通")) {
-      return "https://placehold.co/800x600/14b8a6/ffffff?text=Sapporo+Odori+Park";
-    }
-    return "https://placehold.co/800x600/64748b/ffffff?text=Hokkaido+Travel";
+  // 写真URLを明確に一意にするためのランダムクエリ付与関数
+  function getUniquePhotoUrl(area: string): string {
+    const timestamp = Date.now();
+    if (area.includes("富良野")) return `https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&t=${timestamp}`;
+    if (area.includes("旭川")) return `https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&t=${timestamp}`;
+    if (area.includes("定山渓")) return `https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&t=${timestamp}`;
+    if (area.includes("函館")) return `https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&t=${timestamp}`;
+    if (area.includes("小樽")) return `https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1200&t=${timestamp}`;
+    return `https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1200&t=${timestamp}`;
   }
 
   try {
-    const { data: existingBlogs } = await supabase.from('blog_posts').select('area');
-    const existingAreas = new Set((existingBlogs || []).map((b: any) => b.area));
-
     for (const spot of TARGET_SPOTS) {
-      if (existingAreas.has(spot.area)) {
-        continue;
-      }
+      const uniqueSlug = `${spot.area}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
-      const randomStr = Math.random().toString(36).substring(2, 7);
-      const slugValue = `${spot.area}-${Date.now()}-${randomStr}`;
-
+      // 毎回必ず異なるテキストが生成されるよう、プロンプトに動的な条件を強制する
       const prompt = `
 あなたは北海道のプロのトラベルライターです。
-観光地「${spot.name}（エリア: ${spot.area}）」について、旅行者が思わず行きたくなるような魅力的なブログ記事を作成してください。
-必ず以下のJSONフォーマット（マークダウンのコードブロックは不要、純粋なJSONのみ）で出力してください。
+今回は「${currentVariation}」という切り口で、観光地「${spot.name}（エリア: ${spot.area}）」についての全く新しいブログ記事を執筆してください。
+以前の文章とは完全に異なる表現、独自の視点、新しい構成で記述してください。
+出力は必ず以下の純粋なJSONフォーマットのみ（マークダウンのバッククォートは一切不要）で行ってください。
 
 {
-  "title_ja": "日本語タイトル",
-  "content_ja": "日本語のブログ本文（HTMLタグ含む）",
-  "title_en": "English title for SEO",
-  "content_en": "English blog post content with HTML tags",
-  "title_ko": "한국어 블로그 제목",
-  "content_ko": "가독성이 좋은 한국어 블로그 본문 내용 (HTML 태그 포함)"
+  "title_ja": "日本語のユニークなタイトル",
+  "content_ja": "HTMLタグを含んだ日本語の本文詳細",
+  "title_en": "Unique English title",
+  "content_en": "English blog content with HTML tags",
+  "title_ko": "고유한 한국어 블로그 제목",
+  "content_ko": "HTML 태그가 포함된 한국어 본문 내용"
 }
       `;
 
@@ -87,7 +75,7 @@ export async function GET() {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [{ role: "user", content: prompt }],
-          temperature: 0.7
+          temperature: 0.95 // 創造性を最大化して毎回異なる文面にする
         })
       });
 
@@ -104,15 +92,16 @@ export async function GET() {
       try {
         parsedArticle = JSON.parse(rawContent);
       } catch (e) {
-        errorLogs.push(`JSONパース失敗: ${spot.name}`);
+        errorLogs.push(`JSONパース失敗 (${spot.name}): ${rawContent}`);
         continue;
       }
 
-      const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
+      const thumbnail_url = getUniquePhotoUrl(spot.area);
 
+      // 既存データを上書き・重複させず、常に新しいタイムスタンプで追加インサートする
       const { error: insertError } = await supabase.from('blog_posts').insert([
         {
-          slug: slugValue,
+          slug: uniqueSlug,
           area: spot.area,
           title_ja: parsedArticle.title_ja,
           content_ja: parsedArticle.content_ja,
@@ -130,13 +119,12 @@ export async function GET() {
         errorLogs.push(`インサートエラー (${spot.name}): ${insertError.message}`);
       } else {
         generatedCount++;
-        existingAreas.add(spot.area);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `多言語ブログ記事を ${generatedCount}件 正常に登録しました！`,
+      message: `【AI完全新規生成】切口「${currentVariation}」で ${generatedCount}件 の記事を生成・登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
 
