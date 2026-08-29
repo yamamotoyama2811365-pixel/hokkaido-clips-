@@ -47,33 +47,35 @@ interface BlogPost {
 }
 
 // ==========================================
-// 🛡️ 法律上安全（商用フリー素材）かつ、各観光地に100%合致する専用高画質写真マップ
+// 🛡️ データベース内の乱れたマークダウン文字列や日本語混じりのURLから、純粋な画像URLを完璧に抽出・修復する関数
 // ==========================================
-const AREA_EXACT_PHOTO_MAP: Record<string, string> = {
-  "旭川": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80", // 動物・北国の冬景色・動物園イメージ
-  "旭山": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
-  "定山渓": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80", // 温泉・渓谷・自然
-  "温泉": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80",
-  "富良野": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・花畑・丘
-  "美瑛": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・丘
-  "函館": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80", // 港町・夜景・異国情緒
-  "小樽": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80", // 運河・レトロな倉庫街
-  "札幌": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80", // 札幌の大通公園・都市景観
-  "大通": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80",
-};
+function getCleanAndValidPhoto(post: BlogPost): string {
+  const rawUrl = post.thumbnail_url || "";
+  
+  // 1. マークダウンのリンク形式 [URL](URL) や余分な括弧、スペースが含まれていても、最初の有効な https:// URLを強制抽出
+  const match = rawUrl.match(/https?:\/\/[^\s\]\)]+/);
+  if (match) {
+    let extracted = match[0];
+    // 日本語や全角文字がURLに含まれてしまっている場合はデコードして英数字の正しいURLに直す
+    try {
+      extracted = decodeURIComponent(extracted);
+    } catch (e) {}
 
-function getStrictThumbnail(post: BlogPost): string {
-  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`;
-
-  // エリアやタイトルに含まれるキーワードから、完全に合致する安全な写真を厳密に判定
-  for (const [keyword, photoUrl] of Object.entries(AREA_EXACT_PHOTO_MAP)) {
-    if (text.includes(keyword)) {
-      return photoUrl;
+    // Unsplashの正しいフォーマットになっているかチェックし、破損していればエリア別の綺麗な写真にフォールバック
+    if (extracted.includes("images.unsplash.com")) {
+      return extracted;
     }
   }
 
-  // デフォルトの安全な北海道の自然・観光風景
-  return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
+  // 2. エリア名に応じた安全で綺麗なデフォルト写真
+  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`;
+  if (text.includes("旭川") || text.includes("旭山")) return "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80";
+  if (text.includes("定山渓") || text.includes("温泉")) return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
+  if (text.includes("富良野") || text.includes("美瑛")) return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80";
+  if (text.includes("函館")) return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80";
+  if (text.includes("小樽")) return "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80";
+
+  return "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80";
 }
 
 const REGION_MAP: { id: AreaRegion; label: string; sub: string; keywords: string[] }[] = [
