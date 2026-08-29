@@ -402,11 +402,9 @@ export default function HokkaidoTravelApp() {
     return spots.filter((s) => bookmarkedIds.includes(s.id));
   }, [spots, bookmarkedIds]);
 
-  // 検索またはジャンル別のフィルタリング（DB全体の膨大なデータから完全にヒットさせる）
   const filteredSpots = useMemo(() => {
     let list = spots;
 
-    // 検索キーワードがある場合は、DB全体（1000件規模）から強力に部分一致検索
     if (searchKeyword.trim()) {
       const rawQ = searchKeyword.toLowerCase().trim();
       const targetKeywords = SYNONYM_MAP[searchKeyword] || [rawQ];
@@ -435,7 +433,6 @@ export default function HokkaidoTravelApp() {
       return scoredList;
     }
 
-    // 検索ワードがない場合のジャンルタブフィルター
     if (selectedGenre === "all") {
       list = spots.filter((s) => s.genre !== "travel_gear");
     } else if (selectedGenre === "bookmarks") {
@@ -447,7 +444,6 @@ export default function HokkaidoTravelApp() {
     return list;
   }, [spots, selectedGenre, searchKeyword, bookmarkedSpots]);
 
-  // トップページはスッキリ見せるため最大20件表示（検索時は全ヒットに対応）
   const displayedSpots = searchKeyword.trim() ? filteredSpots : filteredSpots.slice(0, 20);
 
   const handleTagClick = (tag: string) => {
@@ -627,6 +623,40 @@ export default function HokkaidoTravelApp() {
 
       {/* メインの全体コンテナ */}
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
+
+        {/* =========================================================
+         * 【ご要望】北海道観光地紹介コンテンツの大きなバナーセクション
+         * ========================================================= */}
+        <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-r from-teal-900 via-slate-900 to-blue-950 text-white p-6 md:p-10 border border-teal-500/30">
+          <div className="relative z-10 max-w-3xl">
+            <span className="bg-teal-500 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+              Featured Content
+            </span>
+            <h2 className="text-2xl md:text-3xl font-black mt-3 mb-3 leading-tight text-white">
+              北海道観光地紹介コンテンツ
+            </h2>
+            <p className="text-slate-300 text-xs md:text-sm mb-5 leading-relaxed">
+              大自然、絶品グルメ、温泉など、北海道の秘められた魅力や最新のスポット情報を毎日自動生成でお届けします。旅の計画や新たな発見にぜひご活用ください！
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a 
+                href="#spots" 
+                className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl shadow transition duration-200 text-xs"
+              >
+                観光スポット・動画一覧を見る
+              </a>
+              <a 
+                href="#concierge" 
+                className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/40 font-bold px-5 py-2.5 rounded-xl transition duration-200 text-xs"
+              >
+                AIコンシェルジュに相談する
+              </a>
+            </div>
+          </div>
+          <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10 pointer-events-none">
+            <span className="text-9xl font-black">HOKKAIDO</span>
+          </div>
+        </section>
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
@@ -874,7 +904,7 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            <div className="no-print">
+            <div id="spots" className="no-print">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider">
                   {searchKeyword ? `🔍 検索結果 (${filteredSpots.length}件)` : selectedGenre === "night" ? "🌙 すすきの ナイト＆エンタメ動画" : selectedGenre === "all" ? "🔥 ホット＆新着トレンド動画 (TOP20)" : `${selectedGenre.toUpperCase()} おすすめ動画`}
@@ -969,7 +999,7 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
+            <div id="concierge" className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
               <div>
                 <h3 className="text-sm font-bold text-teal-400 flex items-center gap-2">
                   <span>🤖</span> AIトラベルコンシェルジュ
