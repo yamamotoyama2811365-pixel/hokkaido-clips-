@@ -36,9 +36,9 @@ interface SpotItem {
 
 interface BlogPost {
   id: string;
-  title: string;
+  title?: string;
   title_ja?: string;
-  content: string;
+  content?: string;
   content_ja?: string;
   summary?: string;
   area?: string;
@@ -368,13 +368,10 @@ export default function HokkaidoTravelApp() {
 
   const fetchSpotsAndBlogs = async () => {
     try {
-      // 1. スポットデータの取得
-      const { data: spotData, error: spotError } = await supabase
+      const { data: spotData } = await supabase
         .from("spots")
         .select("*")
         .order("created_at", { ascending: false });
-
-      if (spotError) console.error("spots取得エラー:", spotError);
 
       const rawList = spotData && spotData.length > 0 ? spotData : [];
       
@@ -395,14 +392,16 @@ export default function HokkaidoTravelApp() {
         setActiveSpot(fullArchive[0]);
       }
 
-      // 2. ブログ記事データの取得（確実にblogsテーブルからフェッチ）
-      const { data: blogData, error: blogError } = await supabase
-        .from("blogs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (blogError) {
-        console.error("blogs取得エラー:", blogError);
+      // 「blog_posts」および「blogs」の両方をフォールバックとして順に試して確実に取得
+      let blogData: any[] | null = null;
+      let res1 = await supabase.from("blog_posts").select("*").order("created_at", { ascending: false });
+      if (res1.data && res1.data.length > 0) {
+        blogData = res1.data;
+      } else {
+        let res2 = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
+        if (res2.data && res2.data.length > 0) {
+          blogData = res2.data;
+        }
       }
 
       if (blogData && blogData.length > 0) {
@@ -714,7 +713,7 @@ export default function HokkaidoTravelApp() {
           </div>
         </section>
 
-        {/* 独立したブログ記事一覧表示エリア（取得したブログデータを確実に表示） */}
+        {/* 独立したブログ記事一覧表示エリア（blog_posts または blogs をフォールバック取得） */}
         {showBlogSection && (
           <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/95 border border-teal-500/40 p-6 rounded-2xl shadow-xl">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -722,7 +721,7 @@ export default function HokkaidoTravelApp() {
                 <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2">
                   <span>📖</span> 北海道人気観光地紹介！ブログ＆レポート一覧
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">データベースから取得した観光ブログ・詳細レポート記事です。</p>
+                <p className="text-xs text-slate-400 mt-0.5">データベースから取得した最新の観光ブログ・詳細レポート記事です。</p>
               </div>
               <button
                 onClick={() => setShowBlogSection(false)}
@@ -745,17 +744,17 @@ export default function HokkaidoTravelApp() {
                       </span>
                     </div>
                     <h3 className="font-bold text-sm text-white leading-snug">
-                      {post.title_ja || post.title}
+                      {post.title_ja || post.title || "無題のレポート"}
                     </h3>
                     <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">
-                      {post.summary || post.content_ja || post.content}
+                      {post.summary || post.content_ja || post.content || "詳細なレポート本文がここに表示されます。"}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center text-slate-400 text-xs py-8">
-                現在生成されているブログ記事はありません。（Supabaseの `blogs` テーブルのデータをご確認ください）
+                現在生成されているブログ記事はありません。
               </div>
             )}
           </div>
