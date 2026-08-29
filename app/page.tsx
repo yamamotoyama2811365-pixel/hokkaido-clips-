@@ -40,10 +40,16 @@ interface BlogPost {
   title_ja?: string;
   title_ko?: string;
   title_en?: string;
+  タイトル_ja?: string;
+  タイトル_ko?: string;
+  タイトル_en?: string;
   content?: string;
   content_ja?: string;
   content_ko?: string;
   content_en?: string;
+  コンテンツ_ja?: string;
+  コンテンツ_ko?: string;
+  コンテンツ_en?: string;
   summary?: string;
   area?: string;
   thumbnail_url?: string;
@@ -51,10 +57,10 @@ interface BlogPost {
 }
 
 // ==========================================
-// 🎨 過去・現在すべてのデータに対し、観光地に完璧に一致する高画質オフィシャル写真を動的返却
+// 🎨 観光地に完璧に一致する高画質オフィシャル写真を動的返却
 // ==========================================
 function getDynamicSmartPhoto(post: BlogPost): string {
-  const text = `${post.area || ""} ${post.title_ja || ""} ${post.title_ko || ""} ${post.title_en || ""} ${post.title || ""}`.toLowerCase();
+  const text = `${post.area || ""} ${post.タイトル_ja || ""} ${post.title_ja || ""} ${post.タイトル_ko || ""} ${post.title_ko || ""} ${post.タイトル_en || ""} ${post.title_en || ""} ${post.title || ""}`.toLowerCase();
 
   if (text.includes("富良野") || text.includes("美瑛") || text.includes("후라노") || text.includes("비에이") || text.includes("furano") || text.includes("biei")) {
     return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80";
@@ -373,25 +379,25 @@ export default function HokkaidoTravelApp() {
     } catch (err) {}
   };
 
-  // 🌍 多言語対応＆未生成データの完全補完（英語・韓国語がない場合は日本語をベースに自動フォールバック＆表示）
+  // 🌍 Supabaseの実際のカラム名（日本語キー：「タイトル_en」「コンテンツ_en」等）に完全に連動させた多言語取得関数
   const getLocalizedTitle = (post: BlogPost) => {
     if (currentLang === "ko") {
-      return post.title_ko || post.title_ja || post.title || "무제 리포트";
+      return post.タイトル_ko || post.title_ko || post.タイトル_ja || post.title_ja || "무제 리포트";
     }
     if (currentLang === "en") {
-      return post.title_en || post.title_ja || post.title || "Hokkaido Travel Report";
+      return post.タイトル_en || post.title_en || post.タイトル_ja || post.title_ja || "Hokkaido Travel Report";
     }
-    return post.title_ja || post.title || "無題のレポート";
+    return post.タイトル_ja || post.title_ja || post.title || "無題のレポート";
   };
 
   const getLocalizedContent = (post: BlogPost) => {
     if (currentLang === "ko") {
-      return post.content_ko || post.content_ja || post.content || "<p>콘텐츠가 준비 중입니다.</p>";
+      return post.コンテンツ_ko || post.content_ko || post.コンテンツ_ja || post.content_ja || "<p>콘텐츠가 준비 중입니다.</p>";
     }
     if (currentLang === "en") {
-      return post.content_en || post.content_ja || post.content || "<p>Content is coming soon.</p>";
+      return post.コンテンツ_en || post.content_en || post.コンテンツ_ja || post.content_ja || "<p>Content is coming soon.</p>";
     }
-    return post.content_ja || post.content || "本文がありません。";
+    return post.コンテンツ_ja || post.content_ja || post.content || "本文がありません。";
   };
 
   const fetchSpotsAndBlogs = async () => {
