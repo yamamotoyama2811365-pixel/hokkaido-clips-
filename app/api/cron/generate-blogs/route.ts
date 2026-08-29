@@ -28,7 +28,7 @@ export async function GET() {
   let generatedCount = 0;
   let errorLogs: string[] = [];
 
-  // 🎨 各観光地に完璧にマッチする美しく多彩な高画質写真プール（純粋なURL文字列）
+  // 各観光地に完璧にマッチする美しく多彩な高画質写真プール（純粋なURL文字列）
   function getSpotSpecificPhoto(area: string, title: string): string {
     const text = `${area} ${title}`.toLowerCase();
     if (text.includes("富良野") || text.includes("美瑛")) {
@@ -49,7 +49,6 @@ export async function GET() {
     if (text.includes("札幌") || text.includes("大通")) {
       return "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1200&auto=format&fit=crop&q=80";
     }
-    // デフォルトの北海道大自然風景
     return "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&auto=format&fit=crop&q=80";
   }
 
@@ -95,8 +94,7 @@ export async function GET() {
       }
 
       let rawContent = aiData.choices[0].message.content.trim();
-      rawContent = rawContent.replace(/^
-```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
+      rawContent = rawContent.replace(/^```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
 
       let parsedArticle;
       try {
@@ -106,7 +104,6 @@ export async function GET() {
         continue;
       }
 
-      // 修正：マークダウンを含まない純粋なURL文字列を取得
       const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
       const { error: insertError } = await supabase.from('blog_posts').insert([
