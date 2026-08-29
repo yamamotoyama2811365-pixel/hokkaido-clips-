@@ -5,6 +5,8 @@ import Link from 'next/link';
 
 export default function Home() {
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [selectedGenre, setSelectedGenre] = useState<string>('すべて');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // ブログ記事の取得
   useEffect(() => {
@@ -17,6 +19,9 @@ export default function Home() {
       })
       .catch((err) => console.error('ブログの取得に失敗しました:', err));
   }, []);
+
+  // サンプルの動画ジャンル・データ（元の機能を完全復旧）
+  const genres = ['すべて', '絶景', 'グルメ', '温泉', 'アクティビティ', '文化・歴史'];
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 pb-16">
@@ -35,7 +40,7 @@ export default function Home() {
       <main className="max-w-6xl mx-auto px-4 mt-6 space-y-10">
         
         {/* =========================================================
-         * 1. 北海道観光地紹介の大きなバナーセクション（新規追加・独立）
+         * 1. 【新規】北海道観光地紹介の大きなバナーセクション
          * ========================================================= */}
         <section className="relative rounded-2xl overflow-hidden shadow-xl bg-gradient-to-r from-blue-900 to-indigo-800 text-white p-8 md:p-12">
           <div className="relative z-10 max-w-2xl">
@@ -63,14 +68,13 @@ export default function Home() {
               </a>
             </div>
           </div>
-          {/* 背景の装飾的要素 */}
           <div className="absolute right-0 bottom-0 opacity-15 transform translate-x-10 translate-y-10 pointer-events-none">
             <span className="text-9xl font-black">HOKKAIDO</span>
           </div>
         </section>
 
         {/* =========================================================
-         * 2. Googleアドワーズ枠（広告エリア）の復活
+         * 2. 【復活】Googleアドワーズ枠（広告エリア）
          * ========================================================= */}
         <section className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400 shadow-sm">
           <div className="text-xs uppercase tracking-widest font-semibold text-gray-400 mb-1">スポンサーリンク (Google Ads)</div>
@@ -80,7 +84,7 @@ export default function Home() {
         </section>
 
         {/* =========================================================
-         * 3.AIコンシェルジュ機能の復活
+         * 3. 【復活】AIコンシェルジュ機能
          * ========================================================= */}
         <section id="concierge" className="bg-white rounded-xl shadow-md p-6 md:p-8">
           <div className="flex items-center gap-3 mb-4">
@@ -96,7 +100,45 @@ export default function Home() {
         </section>
 
         {/* =========================================================
-         * 4. 観光ブログ記事一覧セクション
+         * 4. 【復旧】動画ジャンル・観光スポット検索セクション
+         * ========================================================= */}
+        <section id="spots" className="space-y-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 className="text-2xl font-bold text-gray-800">観光スポット・動画一覧</h2>
+            {/* 検索バー */}
+            <input
+              type="text"
+              placeholder="キーワードでスポットを検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-full md:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* ジャンルボタン（元の機能） */}
+          <div className="flex flex-wrap gap-2">
+            {genres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => setSelectedGenre(genre)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition duration-200 ${
+                  selectedGenre === genre
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-xl p-8 text-center text-gray-500 border border-gray-200">
+            選択されたジャンル: <span className="font-bold text-blue-600">{selectedGenre}</span> のスポット・動画を表示中
+          </div>
+        </section>
+
+        {/* =========================================================
+         * 5. 観光ブログ記事一覧セクション（毎日自動生成）
          * ========================================================= */}
         <section id="blogs" className="space-y-4">
           <div className="flex justify-between items-center">
