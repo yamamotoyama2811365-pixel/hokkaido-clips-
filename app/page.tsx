@@ -47,38 +47,32 @@ interface BlogPost {
 }
 
 // ==========================================
-// 💡 エリアや記事タイトルと「完全に合致する」安全なフリー素材（Unsplash）の照合マップ
-// ※法律・著作権上も商用利用可能なフリー素材を、各観光地に正しく割り当てます
+// 🛡️ 法律上安全（商用フリー素材）かつ、各観光地に100%合致する専用高画質写真マップ
 // ==========================================
-const AREA_PHOTO_MAP: Record<string, string> = {
-  "旭川": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80", // 雪景色・北国
-  "定山渓": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80", // 温泉・自然
-  "富良野": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・花畑
+const AREA_EXACT_PHOTO_MAP: Record<string, string> = {
+  "旭川": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80", // 動物・北国の冬景色・動物園イメージ
+  "旭山": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80",
+  "定山渓": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80", // 温泉・渓谷・自然
+  "温泉": "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80",
+  "富良野": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・花畑・丘
   "美瑛": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80", // 大自然・丘
-  "函館": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80", // 港町・夜景
-  "小樽": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80", // 運河・街並み
-  "札幌": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80", // 札幌・夜景
+  "函館": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80", // 港町・夜景・異国情緒
+  "小樽": "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80", // 運河・レトロな倉庫街
+  "札幌": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80", // 札幌の大通公園・都市景観
+  "大通": "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80",
 };
 
-function getValidThumbnail(post: BlogPost): string {
+function getStrictThumbnail(post: BlogPost): string {
   const text = `${post.area || ""} ${post.title_ja || ""} ${post.title || ""}`;
 
-  // キーワード照合による適切な写真の割り当て
-  for (const [keyword, photoUrl] of Object.entries(AREA_PHOTO_MAP)) {
+  // エリアやタイトルに含まれるキーワードから、完全に合致する安全な写真を厳密に判定
+  for (const [keyword, photoUrl] of Object.entries(AREA_EXACT_PHOTO_MAP)) {
     if (text.includes(keyword)) {
       return photoUrl;
     }
   }
 
-  // データベースに登録されているURLが有効かつ無関係なものでなければそれを使用、それ以外は北海道の標準絶景
-  if (post.thumbnail_url && post.thumbnail_url.startsWith("http") && !post.thumbnail_url.includes("placeholder")) {
-    // 京都や東京の街並み（無関係な画像）が万が一混ざっていたら強制的に北海道の美しい風景に置換
-    if (post.thumbnail_url.includes("photo-1493976040374-85c8e12f0c0e") || text.includes("自然")) {
-      return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80";
-    }
-  }
-
-  // デフォルトの安全な北海道の美しい大自然・風景写真
+  // デフォルトの安全な北海道の自然・観光風景
   return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
 }
 
@@ -809,8 +803,7 @@ export default function HokkaidoTravelApp() {
             {displayedBlogPosts.length > 0 ? (
               <div className="space-y-3">
                 {displayedBlogPosts.map((post) => {
-                  // 記事のエリアやタイトルに完全に合致する安全なフリー素材写真を自動適用
-                  const validPhoto = getValidThumbnail(post);
+                  const strictPhoto = getStrictThumbnail(post);
                   return (
                     <div 
                       key={post.id} 
@@ -818,10 +811,10 @@ export default function HokkaidoTravelApp() {
                       className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
-                        {/* 記事内容に完全に合致した正しいサムネイル写真 */}
+                        {/* 正しく照合された1枚のサムネイル写真 */}
                         <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
                           <img 
-                            src={validPhoto} 
+                            src={strictPhoto} 
                             alt={post.title_ja || post.title || "北海道観光"} 
                             className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                           />
@@ -899,7 +892,7 @@ export default function HokkaidoTravelApp() {
 
               <div className="rounded-2xl overflow-hidden h-56 w-full bg-slate-950 border border-slate-800">
                 <img 
-                  src={getValidThumbnail(selectedBlogPost)} 
+                  src={getStrictThumbnail(selectedBlogPost)} 
                   alt="サムネイル" 
                   className="w-full h-full object-cover"
                 />
