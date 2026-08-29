@@ -16,14 +16,13 @@ export async function GET() {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 収集・生成する観光地ターゲットのリスト
   const TARGET_SPOTS = [
-    { name: "札幌・大通公園", area: "札幌", keyword: "Odori Park Sapporo sightseeing" },
-    { name: "小樽運河", area: "小樽", keyword: "Otaru Canal tourism" },
-    { name: "函館山ロープウェイ", area: "函館", keyword: "Mount Hakodate night view" },
-    { name: "富良野・美瑛の四季彩の丘", area: "富良野・美瑛", keyword: "Biei Furano flower fields" },
-    { name: "定山渓温泉", area: "定山渓", keyword: "Jozankei hot spring" },
-    { name: "旭山動物園", area: "旭川", keyword: "Asahiyama Zoo" }
+    { name: "札幌・大通公園", area: "札幌" },
+    { name: "小樽運河", area: "小樽" },
+    { name: "函館山ロープウェイ", area: "函館" },
+    { name: "富良野・美瑛の四季彩の丘", area: "富良野・美瑛" },
+    { name: "定山渓温泉", area: "定山渓" },
+    { name: "旭山動物園", area: "旭川" }
   ];
 
   let generatedCount = 0;
@@ -31,16 +30,16 @@ export async function GET() {
 
   try {
     for (const spot of TARGET_SPOTS) {
-      const slug = `${spot.area}-${Date.now()}-${Math.random().toString(36.substring(2, 7))}`;
+      const randomStr = Math.random().toString(36).substring(2, 7);
+      const slug = `${spot.area}-${Date.now()}-${randomStr}`;
 
-      // OpenAI APIを使って、日本語・英語・韓国語のブログ記事を同時生成（リライト）
       const prompt = `
 あなたは北海道のプロのトラベルライターです。
 観光地「${spot.name}（エリア: ${spot.area}）」について、旅行者が思わず行きたくなるような魅力的なブログ記事を作成してください。
 以下のJSONフォーマット（マークダウンのコードブロックは不要、純粋なJSONのみ）で出力してください。
 
 {
-  "title_ja": "特徴を含めた魅力的な日本語タイトル（例: 【札幌・大通公園】雪まつりだけじゃない！四季折々の見どころ）",
+  "title_ja": "特徴を含めた魅力的な日本語タイトル",
   "content_ja": "H2見出しや段落を使った読みやすい日本語のブログ本文（HTMLタグやマークダウンで構成）",
   
   "title_en": "Attractive English title for SEO",
@@ -71,7 +70,6 @@ export async function GET() {
       }
 
       let rawContent = aiData.choices[0].message.content.trim();
-      // マークダウンのコードブロックがついている場合を除去
       rawContent = rawContent.replace(/^```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
 
       let parsedArticle;
@@ -82,7 +80,6 @@ export async function GET() {
         continue;
       }
 
-      // フリー素材のサンプル画像（Unsplash等）を動的に割り当て
       const sampleImages = [
         "[https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&auto=format&fit=crop&q=80](https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&auto=format&fit=crop&q=80)",
         "[https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&auto=format&fit=crop&q=80](https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&auto=format&fit=crop&q=80)",
@@ -90,7 +87,6 @@ export async function GET() {
       ];
       const thumbnail_url = sampleImages[Math.floor(Math.random() * sampleImages.length)];
 
-      // データベースに保存
       const { error: insertError } = await supabase.from('blog_posts').insert([
         {
           slug: slug,
