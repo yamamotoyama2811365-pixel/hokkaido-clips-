@@ -277,7 +277,6 @@ export default function HokkaidoTravelApp() {
   const [generatedPlan, setGeneratedPlan] = useState<SpotItem[] | null>(null);
   const [startFromCurrentLocation, setStartFromCurrentLocation] = useState(true);
 
-  // 独立バナーからブログ一覧に切り替えるための状態
   const [showBlogSection, setShowBlogSection] = useState(false);
 
   const [isGeneratingModalOpen, setIsGeneratingModalOpen] = useState(false);
@@ -650,19 +649,28 @@ export default function HokkaidoTravelApp() {
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
         {/* =========================================================
-         * 【独立バナー】北海道観光地紹介コンテンツの大きなバナーセクション
-         * （動画タブには一切混ぜず、ここで独立してブログ一覧の表示を切り替えられます）
+         * 【リッチバナー】北海道人気観光地紹介！（背景写真コラージュ付き）
          * ========================================================= */}
-        <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-r from-teal-900 via-slate-900 to-blue-950 text-white p-6 md:p-10 border border-teal-500/30">
-          <div className="relative z-10 max-w-3xl">
+        <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
+          {/* 背景に北海道の美しい大自然・観光地のフォトコラージュ画像を配置 */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1600&auto=format&fit=crop&q=80" 
+              alt="北海道の自然と観光地" 
+              className="w-full h-full object-cover opacity-35 filter brightness-90"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
+          </div>
+
+          <div className="relative z-10 max-w-2xl">
             <span className="bg-teal-500 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
               Featured Content
             </span>
-            <h2 className="text-2xl md:text-3xl font-black mt-3 mb-3 leading-tight text-white">
-              北海道観光地紹介コンテンツ（AI自動生成ブログ）
+            <h2 className="text-2xl md:text-4xl font-black mt-3 mb-3 leading-tight text-white drop-shadow-md">
+              北海道人気観光地紹介！
             </h2>
-            <p className="text-slate-300 text-xs md:text-sm mb-5 leading-relaxed">
-              大自然、絶品グルメ、温泉など、北海道の秘められた魅力や最新のスポット情報を毎日自動生成でお届けします。旅の計画や詳細レポートをご覧ください！
+            <p className="text-slate-200 text-xs md:text-sm mb-6 leading-relaxed drop-shadow">
+              大自然、絶品グルメ、温泉、ロマンチックな夜景など、北海道の秘められた魅力や最新のスポット情報を毎日お届けします。旅の計画や詳細レポートをご覧ください！
             </p>
             <div className="flex flex-wrap gap-3">
               <button 
@@ -674,20 +682,17 @@ export default function HokkaidoTravelApp() {
                     }
                   }, 100);
                 }}
-                className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl shadow transition duration-200 text-xs flex items-center gap-1.5"
+                className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-5 py-3 rounded-xl shadow-lg transition duration-200 text-xs flex items-center gap-1.5"
               >
                 <span>📖</span> 観光ブログ記事一覧を見る ({blogPosts.length}件)
               </button>
               <a 
                 href="#concierge" 
-                className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/40 font-bold px-5 py-2.5 rounded-xl transition duration-200 text-xs"
+                className="bg-slate-900/80 hover:bg-slate-900 text-teal-300 border border-teal-500/50 font-bold px-5 py-3 rounded-xl transition duration-200 text-xs backdrop-blur-sm"
               >
                 AIコンシェルジュに相談する
               </a>
             </div>
-          </div>
-          <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10 pointer-events-none">
-            <span className="text-9xl font-black">HOKKAIDO</span>
           </div>
         </section>
 
@@ -697,9 +702,9 @@ export default function HokkaidoTravelApp() {
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <div>
                 <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2">
-                  <span>📖</span> 毎日自動生成！北海道観光地紹介ブログ一覧
+                  <span>📖</span> 北海道人気観光地紹介！ブログ＆レポート一覧
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">AIが自動収集・生成した最新の観光ブログ・詳細レポート記事です。</p>
+                <p className="text-xs text-slate-400 mt-0.5">収集・生成された最新の観光ブログ・詳細レポート記事です。</p>
               </div>
               <button
                 onClick={() => setShowBlogSection(false)}
@@ -807,7 +812,7 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
-            {/* 純粋な動画ジャンルタブ（ブログボタンは一切混ぜずスッキリ分離） */}
+            {/* 純粋な動画ジャンルタブ */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 no-print">
               {[
                 { id: "all", label: "🔥 全て (注目)" },
