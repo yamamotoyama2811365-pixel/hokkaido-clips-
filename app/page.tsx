@@ -46,6 +46,18 @@ interface BlogPost {
   created_at?: string;
 }
 
+// サムネイルURLに混ざってしまったマークダウン記号などを綺麗に除去して純粋なURLを取り出すヘルパー関数
+function cleanThumbnailUrl(url?: string): string {
+  if (!url) return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=400&auto=format&fit=crop&q=80";
+  // [URL](URL) の形式や余分なブラケットを掃除
+  let cleaned = url.trim();
+  const match = cleaned.match(/https?:\/\/[^\s)]+/);
+  if (match) {
+    return match[0];
+  }
+  return cleaned;
+}
+
 const REGION_MAP: { id: AreaRegion; label: string; sub: string; keywords: string[] }[] = [
   { id: "central", label: "道央", sub: "札幌・小樽・千歳・定山渓", keywords: ["札幌", "小樽", "すすきの", "千歳", "空港", "定山渓", "大通", "円山", "クロスホテル"] },
   { id: "south", label: "道南", sub: "函館・登別・洞爺湖", keywords: ["函館", "登別", "洞爺", "北斗", "五稜郭", "室蘭"] },
@@ -281,7 +293,7 @@ export default function HokkaidoTravelApp() {
   const [showBlogSection, setShowBlogSection] = useState(false);
   const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
 
-  // ブログ用ページネーション＆検索機能の状態
+  // ブログ検索および10件ずつのページネーション
   const [blogSearchQuery, setBlogSearchQuery] = useState("");
   const [visibleBlogCount, setVisibleBlogCount] = useState(10);
 
@@ -772,46 +784,49 @@ export default function HokkaidoTravelApp() {
 
             {displayedBlogPosts.length > 0 ? (
               <div className="space-y-3">
-                {displayedBlogPosts.map((post) => (
-                  <div 
-                    key={post.id} 
-                    onClick={() => setSelectedBlogPost(post)}
-                    className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      {/* サムネイル（小さめで綺麗な1枚） */}
-                      <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
-                        <img 
-                          src={post.thumbnail_url || "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=400&auto=format&fit=crop&q=80"} 
-                          alt={post.title_ja || post.title || "北海道観光"} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                        />
-                      </div>
-
-                      {/* エリア＆タイトル */}
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-teal-950 text-teal-300 border border-teal-500/30">
-                            {post.area || "北海道全般"}
-                          </span>
-                          <span className="text-[10px] text-slate-500">
-                            {post.created_at ? new Date(post.created_at).toLocaleDateString() : ""}
-                          </span>
+                {displayedBlogPosts.map((post) => {
+                  const safeThumb = cleanThumbnailUrl(post.thumbnail_url);
+                  return (
+                    <div 
+                      key={post.id} 
+                      onClick={() => setSelectedBlogPost(post)}
+                      className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* 修正済み：1枚だけのすっきりしたサムネイル写真 */}
+                        <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
+                          <img 
+                            src={safeThumb} 
+                            alt={post.title_ja || post.title || "北海道観光"} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          />
                         </div>
-                        <h3 className="font-bold text-xs sm:text-sm text-white truncate group-hover:text-teal-300 transition">
-                          {post.title_ja || post.title || "無題のレポート"}
-                        </h3>
+
+                        {/* エリア＆タイトル */}
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold px-2 py-0.2 rounded bg-teal-950 text-teal-300 border border-teal-500/30">
+                              {post.area || "北海道全般"}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {post.created_at ? new Date(post.created_at).toLocaleDateString() : ""}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-xs sm:text-sm text-white truncate group-hover:text-teal-300 transition">
+                            {post.title_ja || post.title || "無題のレポート"}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* 詳細を見るボタン */}
+                      <div className="flex-shrink-0 self-end sm:self-center">
+                        <span className="px-3 py-1.5 rounded-lg bg-teal-500/10 group-hover:bg-teal-500 text-teal-300 group-hover:text-slate-950 font-extrabold text-xs transition flex items-center gap-1 border border-teal-500/30">
+                          <span>詳細を見る</span> <span>➔</span>
+                        </span>
                       </div>
                     </div>
-
-                    {/* 詳細を見るボタン */}
-                    <div className="flex-shrink-0 self-end sm:self-center">
-                      <span className="px-3 py-1.5 rounded-lg bg-teal-500/10 group-hover:bg-teal-500 text-teal-300 group-hover:text-slate-950 font-extrabold text-xs transition flex items-center gap-1 border border-teal-500/30">
-                        <span>詳細を見る</span> <span>➔</span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* もっと見るボタン（10件以上ある場合） */}
                 {visibleBlogCount < filteredBlogPosts.length && (
@@ -860,7 +875,7 @@ export default function HokkaidoTravelApp() {
               {selectedBlogPost.thumbnail_url && (
                 <div className="rounded-2xl overflow-hidden h-56 w-full bg-slate-950 border border-slate-800">
                   <img 
-                    src={selectedBlogPost.thumbnail_url} 
+                    src={cleanThumbnailUrl(selectedBlogPost.thumbnail_url)} 
                     alt="サムネイル" 
                     className="w-full h-full object-cover"
                   />
