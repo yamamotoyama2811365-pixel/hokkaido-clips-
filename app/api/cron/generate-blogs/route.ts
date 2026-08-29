@@ -28,6 +28,31 @@ export async function GET() {
   let generatedCount = 0;
   let errorLogs: string[] = [];
 
+  // 🎨 各観光地に完璧にマッチする美しく多彩な高画質写真プール（純粋なURL文字列）
+  function getSpotSpecificPhoto(area: string, title: string): string {
+    const text = `${area} ${title}`.toLowerCase();
+    if (text.includes("富良野") || text.includes("美瑛")) {
+      return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&auto=format&fit=crop&q=80";
+    }
+    if (text.includes("旭川") || text.includes("旭山")) {
+      return "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&auto=format&fit=crop&q=80";
+    }
+    if (text.includes("定山渓") || text.includes("温泉")) {
+      return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&auto=format&fit=crop&q=80";
+    }
+    if (text.includes("函館") || text.includes("夜景")) {
+      return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&auto=format&fit=crop&q=80";
+    }
+    if (text.includes("小樽") || text.includes("運河")) {
+      return "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1200&auto=format&fit=crop&q=80";
+    }
+    if (text.includes("札幌") || text.includes("大通")) {
+      return "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1200&auto=format&fit=crop&q=80";
+    }
+    // デフォルトの北海道大自然風景
+    return "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200&auto=format&fit=crop&q=80";
+  }
+
   try {
     for (const spot of TARGET_SPOTS) {
       const randomStr = Math.random().toString(36).substring(2, 7);
@@ -70,7 +95,8 @@ export async function GET() {
       }
 
       let rawContent = aiData.choices[0].message.content.trim();
-      rawContent = rawContent.replace(/^```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
+      rawContent = rawContent.replace(/^
+```json\s*/, "").replace(/^```\s*/, "").replace(/\s*```$/, "");
 
       let parsedArticle;
       try {
@@ -80,12 +106,8 @@ export async function GET() {
         continue;
       }
 
-      const sampleImages = [
-        "[https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&auto=format&fit=crop&q=80](https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&auto=format&fit=crop&q=80)",
-        "[https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&auto=format&fit=crop&q=80](https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&auto=format&fit=crop&q=80)",
-        "[https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&auto=format&fit=crop&q=80](https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&auto=format&fit=crop&q=80)"
-      ];
-      const thumbnail_url = sampleImages[Math.floor(Math.random() * sampleImages.length)];
+      // 修正：マークダウンを含まない純粋なURL文字列を取得
+      const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
       const { error: insertError } = await supabase.from('blog_posts').insert([
         {
