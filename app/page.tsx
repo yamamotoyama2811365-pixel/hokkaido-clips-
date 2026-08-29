@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Script from "next/script";
 import { supabase } from "./supabase";
 
-type Genre = "all" | "food" | "souvenir" | "stay" | "spot" | "night" | "travel_gear";
+type Genre = "all" | "food" | "souvenir" | "stay" | "spot" | "night" | "travel_gear" | "blogs";
 type AreaRegion = "central" | "south" | "east" | "north";
 type VideoPlatform = "youtube" | "tiktok" | "instagram";
 
@@ -32,6 +32,17 @@ interface SpotItem {
   map_query: string;
   created_at?: string;
   souvenirs?: SouvenirItem[];
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  title_ja?: string;
+  content: string;
+  content_ja?: string;
+  summary?: string;
+  area?: string;
+  created_at?: string;
 }
 
 const REGION_MAP: { id: AreaRegion; label: string; sub: string; keywords: string[] }[] = [
@@ -256,6 +267,7 @@ function MultiVideoPlayer({ spot }: { spot: SpotItem }) {
 export default function HokkaidoTravelApp() {
   const [currentLang, setCurrentLang] = useState("ja");
   const [spots, setSpots] = useState<SpotItem[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<Genre | "bookmarks">("all");
   const [selectedRegion, setSelectedRegion] = useState<AreaRegion>("central");
@@ -265,12 +277,16 @@ export default function HokkaidoTravelApp() {
   const [generatedPlan, setGeneratedPlan] = useState<SpotItem[] | null>(null);
   const [startFromCurrentLocation, setStartFromCurrentLocation] = useState(true);
 
+  // 独立バナーからブログ一覧に切り替えるための状態
+  const [showBlogSection, setShowBlogSection] = useState(false);
+
   const [isGeneratingModalOpen, setIsGeneratingModalOpen] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [isAdCompleted, setIsAdCompleted] = useState(false);
 
   const planSectionRef = useRef<HTMLDivElement>(null);
   const activeVideoCardRef = useRef<HTMLDivElement>(null);
+  const blogSectionRef = useRef<HTMLDivElement>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
   const handleSelectSpot = (spot: SpotItem) => {
@@ -351,7 +367,7 @@ export default function HokkaidoTravelApp() {
     }
   };
 
-  const fetchSpots = async () => {
+  const fetchSpotsAndBlogs = async () => {
     try {
       const { data: spotData } = await supabase
         .from("spots")
@@ -376,6 +392,15 @@ export default function HokkaidoTravelApp() {
       if (!activeSpot && fullArchive.length > 0) {
         setActiveSpot(fullArchive[0]);
       }
+
+      const { data: blogData } = await supabase
+        .from("blogs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (blogData && blogData.length > 0) {
+        setBlogPosts(blogData);
+      }
     } catch (err) {
       console.error("データ取得例外:", err);
     } finally {
@@ -384,7 +409,7 @@ export default function HokkaidoTravelApp() {
   };
 
   useEffect(() => {
-    fetchSpots();
+    fetchSpotsAndBlogs();
 
     (window as any).googleTranslateElementInit = () => {
       new (window as any).google.translate.TranslateElement(
@@ -566,7 +591,7 @@ export default function HokkaidoTravelApp() {
       <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/80 shadow-2xl">
         <div className="w-full max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2.5">
           
-          <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 group cursor-pointer" onClick={() => { setSelectedGenre("all"); setSearchKeyword(""); }}>
+          <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 group cursor-pointer" onClick={() => { setSelectedGenre("all"); setShowBlogSection(false); setSearchKeyword(""); }}>
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center rounded-[14px] bg-gradient-to-tr from-cyan-500 via-teal-400 to-indigo-500 p-[1.5px] shadow-[0_4px_20px_rgba(45,212,191,0.35)] group-hover:scale-105 transition-all duration-300">
                 <div className="w-full h-full bg-gradient-to-b from-slate-900 to-slate-950 rounded-[12.5px] flex items-center justify-center relative overflow-hidden">
@@ -625,7 +650,8 @@ export default function HokkaidoTravelApp() {
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
         {/* =========================================================
-         * 【ご要望】北海道観光地紹介コンテンツの大きなバナーセクション
+         * 【独立バナー】北海道観光地紹介コンテンツの大きなバナーセクション
+         * （動画タブには一切混ぜず、ここで独立してブログ一覧の表示を切り替えられます）
          * ========================================================= */}
         <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-r from-teal-900 via-slate-900 to-blue-950 text-white p-6 md:p-10 border border-teal-500/30">
           <div className="relative z-10 max-w-3xl">
@@ -633,18 +659,25 @@ export default function HokkaidoTravelApp() {
               Featured Content
             </span>
             <h2 className="text-2xl md:text-3xl font-black mt-3 mb-3 leading-tight text-white">
-              北海道観光地紹介コンテンツ
+              北海道観光地紹介コンテンツ（AI自動生成ブログ）
             </h2>
             <p className="text-slate-300 text-xs md:text-sm mb-5 leading-relaxed">
-              大自然、絶品グルメ、温泉など、北海道の秘められた魅力や最新のスポット情報を毎日自動生成でお届けします。旅の計画や新たな発見にぜひご活用ください！
+              大自然、絶品グルメ、温泉など、北海道の秘められた魅力や最新のスポット情報を毎日自動生成でお届けします。旅の計画や詳細レポートをご覧ください！
             </p>
             <div className="flex flex-wrap gap-3">
-              <a 
-                href="#spots" 
-                className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl shadow transition duration-200 text-xs"
+              <button 
+                onClick={() => {
+                  setShowBlogSection(true);
+                  setTimeout(() => {
+                    if (blogSectionRef.current) {
+                      blogSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }, 100);
+                }}
+                className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-5 py-2.5 rounded-xl shadow transition duration-200 text-xs flex items-center gap-1.5"
               >
-                観光スポット・動画一覧を見る
-              </a>
+                <span>📖</span> 観光ブログ記事一覧を見る ({blogPosts.length}件)
+              </button>
               <a 
                 href="#concierge" 
                 className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/40 font-bold px-5 py-2.5 rounded-xl transition duration-200 text-xs"
@@ -657,6 +690,53 @@ export default function HokkaidoTravelApp() {
             <span className="text-9xl font-black">HOKKAIDO</span>
           </div>
         </section>
+
+        {/* 独立したブログ記事一覧表示エリア（バナーのボタンを押した時に展開） */}
+        {showBlogSection && (
+          <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/90 border border-teal-500/40 p-6 rounded-2xl shadow-xl">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div>
+                <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2">
+                  <span>📖</span> 毎日自動生成！北海道観光地紹介ブログ一覧
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">AIが自動収集・生成した最新の観光ブログ・詳細レポート記事です。</p>
+              </div>
+              <button
+                onClick={() => setShowBlogSection(false)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg border border-slate-700 transition"
+              >
+                ✕ 閉じる
+              </button>
+            </div>
+
+            {blogPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {blogPosts.map((post) => (
+                  <div key={post.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5 hover:border-teal-500/40 transition">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-teal-400 font-bold bg-teal-950/80 px-2.5 py-0.5 rounded border border-teal-500/30">
+                        {post.area || "北海道全般"}
+                      </span>
+                      <span className="text-slate-500">
+                        {post.created_at ? new Date(post.created_at).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-sm text-white leading-snug">
+                      {post.title_ja || post.title}
+                    </h3>
+                    <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">
+                      {post.summary || post.content_ja || post.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-slate-400 text-xs py-8">
+                現在生成されているブログ記事はありません。
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
@@ -727,6 +807,7 @@ export default function HokkaidoTravelApp() {
               </div>
             )}
 
+            {/* 純粋な動画ジャンルタブ（ブログボタンは一切混ぜずスッキリ分離） */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 no-print">
               {[
                 { id: "all", label: "🔥 全て (注目)" },
