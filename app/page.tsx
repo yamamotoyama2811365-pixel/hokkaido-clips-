@@ -732,11 +732,11 @@ export default function HokkaidoTravelApp() {
           </div>
         </section>
 
-        {/* 独立したブログ記事一覧表示エリア（左に小サムネイル、右にタイトル・詳細ボタンのリスト形式 ＋ 検索窓 ＋ 新着10件＆もっと見る） */}
+        {/* 独立したブログ記事一覧表示エリア（サムネイル横並びリスト・検索窓・10件表示＆もっと見る） */}
         {showBlogSection && (
           <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/95 border border-teal-500/40 p-5 md:p-6 rounded-2xl shadow-xl">
             
-            {/* ヘルパーヘッダー（タイトル、検索窓、閉じるボタンを綺麗に配置） */}
+            {/* ヘッダー：タイトル、検索窓、閉じるボタン */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
                 <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2">
@@ -754,7 +754,7 @@ export default function HokkaidoTravelApp() {
                     value={blogSearchQuery}
                     onChange={(e) => {
                       setBlogSearchQuery(e.target.value);
-                      setVisibleBlogCount(10); // 検索時は10件リセット
+                      setVisibleBlogCount(10);
                     }}
                     placeholder="観光地・キーワードで検索..."
                     className="pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700 focus:border-teal-400 rounded-xl text-xs text-white placeholder:text-slate-500 outline-none w-48 sm:w-60"
@@ -776,11 +776,11 @@ export default function HokkaidoTravelApp() {
                   <div 
                     key={post.id} 
                     onClick={() => setSelectedBlogPost(post)}
-                    className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
+                    className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      {/* サムネイル（小さめで綺麗な正方形・横長） */}
-                      <div className="relative w-20 h-16 sm:w-24 sm:h-18 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
+                      {/* サムネイル（小さめで綺麗な1枚） */}
+                      <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
                         <img 
                           src={post.thumbnail_url || "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=400&auto=format&fit=crop&q=80"} 
                           alt={post.title_ja || post.title || "北海道観光"} 
@@ -805,7 +805,7 @@ export default function HokkaidoTravelApp() {
                     </div>
 
                     {/* 詳細を見るボタン */}
-                    <div className="flex-shrink-0 pl-2">
+                    <div className="flex-shrink-0 self-end sm:self-center">
                       <span className="px-3 py-1.5 rounded-lg bg-teal-500/10 group-hover:bg-teal-500 text-teal-300 group-hover:text-slate-950 font-extrabold text-xs transition flex items-center gap-1 border border-teal-500/30">
                         <span>詳細を見る</span> <span>➔</span>
                       </span>
