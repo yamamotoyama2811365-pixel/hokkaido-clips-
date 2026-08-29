@@ -649,20 +649,27 @@ export default function HokkaidoTravelApp() {
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
         {/* =========================================================
-         * 【リッチバナー】北海道人気観光地紹介！（背景写真コラージュ付き）
+         * 【リッチバナー】北海道人気観光地紹介！（すすきの夜景＆大自然のコラージュ背景）
          * ========================================================= */}
         <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
-          {/* 背景に北海道の美しい大自然・観光地のフォトコラージュ画像を配置 */}
+          {/* 背景にすすきのの夜景と大自然をイメージさせる美しいフォトコラージュ */}
           <div className="absolute inset-0 z-0">
-            <img 
-              src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1600&auto=format&fit=crop&q=80" 
-              alt="北海道の自然と観光地" 
-              className="w-full h-full object-cover opacity-35 filter brightness-90"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-950/40 z-10" />
+            <div className="grid grid-cols-2 w-full h-full opacity-40">
+              <img 
+                src="https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1000&auto=format&fit=crop&q=80" 
+                alt="すすきの夜景" 
+                className="w-full h-full object-cover"
+              />
+              <img 
+                src="https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1000&auto=format&fit=crop&q=80" 
+                alt="北海道の大自然" 
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
 
-          <div className="relative z-10 max-w-2xl">
+          <div className="relative z-20 max-w-2xl">
             <span className="bg-teal-500 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
               Featured Content
             </span>
