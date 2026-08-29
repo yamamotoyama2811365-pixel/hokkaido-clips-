@@ -652,7 +652,6 @@ export default function HokkaidoTravelApp() {
          * 【リッチバナー】北海道人気観光地紹介！（すすきの夜景＆大自然の写真コラージュ）
          * ========================================================= */}
         <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
-          {/* 背景：左側＝すすきの夜景、右側＝北海道の大自然（確実に正しい北海道の風景写真URL） */}
           <div className="absolute inset-0 z-0 flex">
             <div className="w-1/2 h-full relative">
               <img 
@@ -668,7 +667,6 @@ export default function HokkaidoTravelApp() {
                 className="w-full h-full object-cover filter brightness-75"
               />
             </div>
-            {/* 文字がハッキリ読めるように滑らかなダークグラデーションを重ねる */}
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/40 z-10" />
           </div>
 
@@ -706,15 +704,15 @@ export default function HokkaidoTravelApp() {
           </div>
         </section>
 
-        {/* 独立したブログ記事一覧表示エリア（バナーのボタンを押した時に展開） */}
+        {/* 独立したブログ記事一覧表示エリア（データベースから取得したブログ6記事を確実に表示） */}
         {showBlogSection && (
-          <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/90 border border-teal-500/40 p-6 rounded-2xl shadow-xl">
+          <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/95 border border-teal-500/40 p-6 rounded-2xl shadow-xl">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <div>
                 <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2">
                   <span>📖</span> 北海道人気観光地紹介！ブログ＆レポート一覧
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">収集・生成された最新の観光ブログ・詳細レポート記事です。</p>
+                <p className="text-xs text-slate-400 mt-0.5">API・データベースで自動生成された最新の観光ブログ・詳細レポート記事です。</p>
               </div>
               <button
                 onClick={() => setShowBlogSection(false)}
