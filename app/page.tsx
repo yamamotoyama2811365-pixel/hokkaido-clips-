@@ -51,47 +51,32 @@ interface BlogPost {
 }
 
 // ==========================================
-// 🎨 各観光地の雰囲気に完璧に一致する厳選高画質写真リスト（富良野・函館・小樽など完全網羅）
+// 🎨 過去・現在すべてのデータに対し、観光地に完璧に一致する高画質オフィシャル写真を動的返却
 // ==========================================
-function getDynamicSmartPhoto(post: BlogPost, lang: string = "ja"): string {
+function getDynamicSmartPhoto(post: BlogPost): string {
   const text = `${post.area || ""} ${post.title_ja || ""} ${post.title_ko || ""} ${post.title_en || ""} ${post.title || ""}`.toLowerCase();
 
-  // 1. 富良野・美瑛（ラベンダー・丘・大自然）
   if (text.includes("富良野") || text.includes("美瑛") || text.includes("후라노") || text.includes("비에이") || text.includes("furano") || text.includes("biei")) {
     return "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&auto=format&fit=crop&q=80";
   }
-
-  // 2. 旭川・旭山動物園（動物・雪景色・北国）
   if (text.includes("旭川") || text.includes("旭山") || text.includes("動物園") || text.includes("아사히카와") || text.includes("asahikawa")) {
     return "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80";
   }
-
-  // 3. 定山渓・温泉（渓谷・露天風呂・自然）
   if (text.includes("定山渓") || text.includes("温泉") || text.includes("渓谷") || text.includes("조잔케이") || text.includes("온천") || text.includes("jozankei")) {
     return "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=800&auto=format&fit=crop&q=80";
   }
-
-  // 4. 函館（夜景・教会・異国情緒・港町）
   if (text.includes("函館") || text.includes("夜景") || text.includes("ロープウェイ") || text.includes("하코다테") || text.includes("hakodate")) {
     return "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&auto=format&fit=crop&q=80";
   }
-
-  // 5. 小樽（運河・レトロな倉庫・散策）
   if (text.includes("小樽") || text.includes("運河") || text.includes("오타루") || text.includes("otaru")) {
     return "https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=800&auto=format&fit=crop&q=80";
   }
-
-  // 6. 札幌・大通公園（テレビ塔・都会と自然の融合）
   if (text.includes("札幌") || text.includes("大通公園") || text.includes("大通") || text.includes("삿포로") || text.includes("sapporo")) {
     return "https://images.unsplash.com/photo-1546874177-af3118e6e580?w=800&auto=format&fit=crop&q=80";
   }
-
-  // 7. グルメ全般（海鮮・ラーメン・スープカレーなど）
   if (text.includes("グルメ") || text.includes("ラーメン") || text.includes("海鮮") || text.includes("スープカレー") || text.includes("ジンギスカン") || text.includes("맛집") || text.includes("라멘")) {
     return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&auto=format&fit=crop&q=80";
   }
-
-  // デフォルト（北海道の美しい大自然風景）
   return "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80";
 }
 
@@ -388,19 +373,24 @@ export default function HokkaidoTravelApp() {
     } catch (err) {}
   };
 
-  // 多言語対応：現在の言語に応じたタイトルを取得
+  // 🌍 多言語対応＆未生成データの完全補完（英語・韓国語がない場合は日本語をベースに自動フォールバック＆表示）
   const getLocalizedTitle = (post: BlogPost) => {
-    if (currentLang === "ko" && post.title_ko) return post.title_ko;
-    if (currentLang === "en" && post.title_en) return post.title_en;
-    if (currentLang.startsWith("zh") && post.title_en) return post.title_en; // フォールバック
+    if (currentLang === "ko") {
+      return post.title_ko || post.title_ja || post.title || "무제 리포트";
+    }
+    if (currentLang === "en") {
+      return post.title_en || post.title_ja || post.title || "Hokkaido Travel Report";
+    }
     return post.title_ja || post.title || "無題のレポート";
   };
 
-  // 多言語対応：現在の言語に応じた本文を取得
   const getLocalizedContent = (post: BlogPost) => {
-    if (currentLang === "ko" && post.content_ko) return post.content_ko;
-    if (currentLang === "en" && post.content_en) return post.content_en;
-    if (currentLang.startsWith("zh") && post.content_en) return post.content_en;
+    if (currentLang === "ko") {
+      return post.content_ko || post.content_ja || post.content || "<p>콘텐츠가 준비 중입니다.</p>";
+    }
+    if (currentLang === "en") {
+      return post.content_en || post.content_ja || post.content || "<p>Content is coming soon.</p>";
+    }
     return post.content_ja || post.content || "本文がありません。";
   };
 
@@ -667,7 +657,7 @@ export default function HokkaidoTravelApp() {
               <span>❤️</span> <span>マーク一覧 ({bookmarkedIds.length})</span>
             </button>
 
-            {/* 多言語切り替えセレクトボックス（データベースの各カラムと完全連動） */}
+            {/* 多言語切り替え */}
             <select
               value={currentLang}
               onChange={(e) => handleLanguageChange(e.target.value)}
@@ -787,7 +777,7 @@ export default function HokkaidoTravelApp() {
             {displayedBlogPosts.length > 0 ? (
               <div className="space-y-3">
                 {displayedBlogPosts.map((post) => {
-                  const smartPhoto = getDynamicSmartPhoto(post, currentLang);
+                  const smartPhoto = getDynamicSmartPhoto(post);
                   const title = getLocalizedTitle(post);
                   return (
                     <div 
@@ -873,7 +863,7 @@ export default function HokkaidoTravelApp() {
 
               <div className="rounded-2xl overflow-hidden h-56 w-full bg-slate-950 border border-slate-800">
                 <img 
-                  src={getDynamicSmartPhoto(selectedBlogPost, currentLang)} 
+                  src={getDynamicSmartPhoto(selectedBlogPost)} 
                   alt="サムネイル" 
                   className="w-full h-full object-cover"
                 />
