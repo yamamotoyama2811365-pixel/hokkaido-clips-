@@ -52,18 +52,17 @@ export async function GET() {
   }
 
   try {
-    // 1. すでに登録されている既存の記事をすべて取得して、重複チェックの準備をする
-    const { data: existingBlogs } = await supabase.from('blog_posts').select('area, タイトル_ja');
+    // 既存データの重複チェック（エリア名で判定）
+    const { data: existingBlogs } = await supabase.from('blog_posts').select('area');
     const existingAreas = new Set((existingBlogs || []).map((b: any) => b.area));
 
     for (const spot of TARGET_SPOTS) {
-      // 既にそのエリアの記事が存在する場合は重複作成をスキップ
       if (existingAreas.has(spot.area)) {
         continue;
       }
 
       const randomStr = Math.random().toString(36).substring(2, 7);
-      const slug = `${spot.area}-${Date.now()}-${randomStr}`;
+      const slugValue = `${spot.area}-${Date.now()}-${randomStr}`;
 
       const prompt = `
 あなたは北海道のプロのトラベルライターです。
@@ -112,31 +111,43 @@ export async function GET() {
 
       const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
-      const { error: insertError } = await supabase.from('blog_posts').insert([
-        {
-          slug: slug,
-          area: spot.area,
-          タイトル_ja: parsedArticle.title_ja,
-          コンテンツ_ja: parsedArticle.content_ja,
-          タイトル_en: parsedArticle.title_en,
-          コンテンツ_en: parsedArticle.content_en,
-          タイトル_ko: parsedArticle.title_ko,
-          コンテンツ_ko: parsedArticle.content_ko,
-          thumbnail_url: thumbnail_url
-        }
-      ]);
+      // スクリーンショットのテーブル構造（日本語表示・英語実キー混在）に合わせた完全対応インサート
+      const insertPayload: any = {
+        area: spot.area,
+        エリア: spot.area,
+        タイトル_ja: parsedArticle.title_ja,
+        コンテンツ_ja: parsedArticle.content_ja,
+        タイトル_en: parsedArticle.title_en,
+        コンテンツ_en: parsedArticle.content_en,
+        タイトル_ko: parsedArticle.title_ko,
+        コンテンツ_ko: parsedArticle.content_ko,
+        title_ja: parsedArticle.title_ja,
+        content_ja: parsedArticle.content_ja,
+        title_en: parsedArticle.title_en,
+        content_en: parsedArticle.content_en,
+        title_ko: parsedArticle.title_ko,
+        content_ko: parsedArticle.content_ko,
+        thumbnail_url: thumbnail_url,
+        サムネイルURL: thumbnail_url
+      };
+
+      // slug / ナメクジ カラムの揺れに対応
+      insertPayload.slug = slugValue;
+      insertPayload.ナメクジ = slugValue;
+
+      const { error: insertError } = await supabase.from('blog_posts').insert([insertPayload]);
 
       if (insertError) {
-        errorLogs.push(insertError.message);
+        errorLogs.push(`インサートエラー (${spot.name}): ${insertError.message}`);
       } else {
         generatedCount++;
-        existingAreas.add(spot.area); // 今回追加したエリアも重複除外対象に追加
+        existingAreas.add(spot.area);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `重複を防ぎつつ、新規の多言語ブログを ${generatedCount}件 登録しました！`,
+      message: `多言語ブログ記事を ${generatedCount}件 正常に登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
 
