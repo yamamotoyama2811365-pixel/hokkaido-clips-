@@ -52,7 +52,16 @@ export async function GET() {
   }
 
   try {
+    // 1. すでに登録されている既存の記事をすべて取得して、重複チェックの準備をする
+    const { data: existingBlogs } = await supabase.from('blog_posts').select('area, タイトル_ja');
+    const existingAreas = new Set((existingBlogs || []).map((b: any) => b.area));
+
     for (const spot of TARGET_SPOTS) {
+      // 既にそのエリアの記事が存在する場合は重複作成をスキップ
+      if (existingAreas.has(spot.area)) {
+        continue;
+      }
+
       const randomStr = Math.random().toString(36).substring(2, 7);
       const slug = `${spot.area}-${Date.now()}-${randomStr}`;
 
@@ -103,7 +112,6 @@ export async function GET() {
 
       const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
-      // テーブル名を 'blog_posts' に戻してインサート
       const { error: insertError } = await supabase.from('blog_posts').insert([
         {
           slug: slug,
@@ -122,12 +130,13 @@ export async function GET() {
         errorLogs.push(insertError.message);
       } else {
         generatedCount++;
+        existingAreas.add(spot.area); // 今回追加したエリアも重複除外対象に追加
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `blog_posts テーブルに多言語ブログを ${generatedCount}件 登録しました！`,
+      message: `重複を防ぎつつ、新規の多言語ブログを ${generatedCount}件 登録しました！`,
       errors: errorLogs.length > 0 ? errorLogs : undefined
     });
 
