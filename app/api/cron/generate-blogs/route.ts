@@ -52,7 +52,7 @@ export async function GET() {
   }
 
   try {
-    // 既存データの重複チェック（エリア名で判定）
+    // 既存データの重複チェック
     const { data: existingBlogs } = await supabase.from('blog_posts').select('area');
     const existingAreas = new Set((existingBlogs || []).map((b: any) => b.area));
 
@@ -111,31 +111,22 @@ export async function GET() {
 
       const thumbnail_url = getSpotSpecificPhoto(spot.area, spot.name);
 
-      // スクリーンショットのテーブル構造（日本語表示・英語実キー混在）に合わせた完全対応インサート
-      const insertPayload: any = {
-        area: spot.area,
-        エリア: spot.area,
-        タイトル_ja: parsedArticle.title_ja,
-        コンテンツ_ja: parsedArticle.content_ja,
-        タイトル_en: parsedArticle.title_en,
-        コンテンツ_en: parsedArticle.content_en,
-        タイトル_ko: parsedArticle.title_ko,
-        コンテンツ_ko: parsedArticle.content_ko,
-        title_ja: parsedArticle.title_ja,
-        content_ja: parsedArticle.content_ja,
-        title_en: parsedArticle.title_en,
-        content_en: parsedArticle.content_en,
-        title_ko: parsedArticle.title_ko,
-        content_ko: parsedArticle.content_ko,
-        thumbnail_url: thumbnail_url,
-        サムネイルURL: thumbnail_url
-      };
-
-      // slug / ナメクジ カラムの揺れに対応
-      insertPayload.slug = slugValue;
-      insertPayload.ナメクジ = slugValue;
-
-      const { error: insertError } = await supabase.from('blog_posts').insert([insertPayload]);
+      // Supabaseの実際のスキーマ定義（英語カラム名）に100%一致させた安全なインサート
+      const { error: insertError } = await supabase.from('blog_posts').insert([
+        {
+          slug: slugValue,
+          area: spot.area,
+          title_ja: parsedArticle.title_ja,
+          content_ja: parsedArticle.content_ja,
+          title_en: parsedArticle.title_en,
+          content_en: parsedArticle.content_en,
+          title_ko: parsedArticle.title_ko,
+          content_ko: parsedArticle.content_ko,
+          thumbnail_url: thumbnail_url,
+          source_name: "HOKKAIDO CLIPS 編集部 & AIトラベルエディター",
+          source_url: "[https://hokkaido-clips.com](https://hokkaido-clips.com)"
+        }
+      ]);
 
       if (insertError) {
         errorLogs.push(`インサートエラー (${spot.name}): ${insertError.message}`);
