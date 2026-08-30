@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Script from "next/script";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "./supabase";
 
 type Genre = "all" | "food" | "souvenir" | "stay" | "spot" | "night" | "travel_gear" | "blogs";
@@ -286,7 +286,6 @@ function MultiVideoPlayer({ spot }: { spot: SpotItem }) {
 }
 
 export default function HokkaidoTravelApp() {
-  const router = useRouter();
   const [currentLang, setCurrentLang] = useState("ja");
   const [spots, setSpots] = useState<SpotItem[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -621,7 +620,6 @@ export default function HokkaidoTravelApp() {
               <span>❤️</span> <span>マーク一覧 ({bookmarkedIds.length})</span>
             </button>
 
-            {/* 多言語切り替え */}
             <select
               value={currentLang}
               onChange={(e) => handleLanguageChange(e.target.value)}
@@ -646,9 +644,7 @@ export default function HokkaidoTravelApp() {
       {/* メインの全体コンテナ */}
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        {/* =========================================================
-         * 【リッチバナー】北海道人気観光地紹介！
-         * ========================================================= */}
+        {/* 【リッチバナー】北海道人気観光地紹介！ */}
         <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
           <div className="absolute inset-0 z-0 flex">
             <div className="w-1/2 h-full relative">
@@ -702,7 +698,7 @@ export default function HokkaidoTravelApp() {
           </div>
         </section>
 
-        {/* 独立したブログ記事一覧表示エリア（ポップアップ廃止・個別ページへダイレクト遷移） */}
+        {/* 独立したブログ記事一覧表示エリア（ポップアップ完全排除・Linkによる完全ページ遷移） */}
         {showBlogSection && (
           <div ref={blogSectionRef} className="space-y-4 no-print bg-slate-900/95 border border-teal-500/40 p-5 md:p-6 rounded-2xl shadow-xl">
             
@@ -743,14 +739,13 @@ export default function HokkaidoTravelApp() {
                 {displayedBlogPosts.map((post) => {
                   const smartPhoto = getDynamicSmartPhoto(post);
                   const title = getLocalizedTitle(post);
-                  // ポップアップを開かずに個別ページ（/blog/[slug]）へダイレクト遷移
                   const targetUrl = `/blog/${post.slug || post.id}`;
 
                   return (
-                    <div 
+                    <Link
                       key={post.id} 
-                      onClick={() => router.push(targetUrl)}
-                      className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80"
+                      href={targetUrl}
+                      className="group bg-slate-950 border border-slate-800 hover:border-teal-500/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition cursor-pointer shadow-md hover:bg-slate-900/80 block"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="relative w-20 h-16 sm:w-24 sm:h-16 rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 border border-slate-800">
@@ -778,10 +773,10 @@ export default function HokkaidoTravelApp() {
 
                       <div className="flex-shrink-0 self-end sm:self-center">
                         <span className="px-3 py-1.5 rounded-lg bg-teal-500/10 group-hover:bg-teal-500 text-teal-300 group-hover:text-slate-950 font-extrabold text-xs transition flex items-center gap-1 border border-teal-500/30">
-                          <span>詳細を読む</span> <span>➔</span>
+                          <span>詳細を見る</span> <span>➔</span>
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
 
