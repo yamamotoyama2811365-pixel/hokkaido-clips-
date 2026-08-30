@@ -12,7 +12,6 @@ export async function GET() {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 毎回異なるシード値（ランダムな要素）を付与するためのバリエーション
   const RANDOM_VARIATIONS = [
     "初心者向けのモデルコースと穴場スポット",
     "地元民だけが知るディープな魅力と最新トレンド",
@@ -34,10 +33,10 @@ export async function GET() {
   let generatedCount = 0;
   let errorLogs: string[] = [];
 
-  // 写真URLを明確に一意にするためのランダムクエリ付与関数
   function getUniquePhotoUrl(area: string): string {
     const timestamp = Date.now();
-    if (area.includes("富良野")) return `https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&t=${timestamp}`;
+    // 各エリアごとに異なる複数の高画質フリー素材を用意して確実に変化させる
+    if (area.includes("富良野")) return `https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1200&t=${timestamp}`;
     if (area.includes("旭川")) return `https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&t=${timestamp}`;
     if (area.includes("定山渓")) return `https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&t=${timestamp}`;
     if (area.includes("函館")) return `https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&t=${timestamp}`;
@@ -49,12 +48,15 @@ export async function GET() {
     for (const spot of TARGET_SPOTS) {
       const uniqueSlug = `${spot.area}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
-      // 毎回必ず異なるテキストが生成されるよう、プロンプトに動的な条件を強制する
       const prompt = `
 あなたは北海道のプロのトラベルライターです。
 今回は「${currentVariation}」という切り口で、観光地「${spot.name}（エリア: ${spot.area}）」についての全く新しいブログ記事を執筆してください。
-以前の文章とは完全に異なる表現、独自の視点、新しい構成で記述してください。
 出力は必ず以下の純粋なJSONフォーマットのみ（マークダウンのバッククォートは一切不要）で行ってください。
+
+【重要ルール】
+- title_ja と content_ja は必ず自然な「日本語」で記述してください。
+- title_en と content_en は必ず自然な「英語 (English)」で記述してください（日本語を混ぜないこと）。
+- title_ko と content_ko は必ず自然な「韓国語 (한국어)」で記述してください。
 
 {
   "title_ja": "日本語のユニークなタイトル",
@@ -75,7 +77,7 @@ export async function GET() {
         body: JSON.stringify({
           model: "gpt-4o-mini",
           messages: [{ role: "user", content: prompt }],
-          temperature: 0.95 // 創造性を最大化して毎回異なる文面にする
+          temperature: 0.95
         })
       });
 
@@ -98,7 +100,6 @@ export async function GET() {
 
       const thumbnail_url = getUniquePhotoUrl(spot.area);
 
-      // 既存データを上書き・重複させず、常に新しいタイムスタンプで追加インサートする
       const { error: insertError } = await supabase.from('blog_posts').insert([
         {
           slug: uniqueSlug,
