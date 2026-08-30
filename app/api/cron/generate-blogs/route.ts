@@ -35,13 +35,15 @@ export async function GET() {
 
   function getUniquePhotoUrl(area: string): string {
     const timestamp = Date.now();
-    if (area.includes("富良野")) return `[https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1200&t=$](https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1200&t=$){timestamp}`;
-    if (area.includes("旭川")) return `[https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&t=$](https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&t=$){timestamp}`;
-    if (area.includes("定山渓")) return `[https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&t=$](https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&t=$){timestamp}`;
-    if (area.includes("函館")) return `[https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&t=$](https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&t=$){timestamp}`;
-    if (area.includes("小樽")) return `[https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1200&t=$](https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1200&t=$){timestamp}`;
-    return `[https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1200&t=$](https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1200&t=$){timestamp}`;
+    if (area.includes("富良野")) return `https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1200&t=${timestamp}`;
+    if (area.includes("旭川")) return `https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&t=${timestamp}`;
+    if (area.includes("定山渓")) return `https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&t=${timestamp}`;
+    if (area.includes("函館")) return `https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1200&t=${timestamp}`;
+    if (area.includes("小樽")) return `https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1200&t=${timestamp}`;
+    return `https://images.unsplash.com/photo-1546874177-af3118e6e580?w=1200&t=${timestamp}`;
   }
+
+  const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
   try {
     for (const spot of TARGET_SPOTS) {
@@ -59,7 +61,7 @@ export async function GET() {
 }
       `;
 
-      const aiResJa = await fetch("[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)", {
+      const aiResJa = await fetch(OPENAI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
         body: JSON.stringify({
@@ -98,7 +100,7 @@ Japanese Title: ${parsedJa.title_ja}
 Japanese Content: ${parsedJa.content_ja}
       `;
 
-      const aiResEn = await fetch("https://api.openai.com/v1/chat/completions", {
+      const aiResEn = await fetch(OPENAI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
         body: JSON.stringify({
@@ -134,7 +136,7 @@ Japanese Content: ${parsedJa.content_ja}
 일본어 본문: ${parsedJa.content_ja}
       `;
 
-      const aiResKo = await fetch("[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)", {
+      const aiResKo = await fetch(OPENAI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
         body: JSON.stringify({
@@ -170,7 +172,7 @@ Japanese Content: ${parsedJa.content_ja}
           content_ko: content_ko,
           thumbnail_url: thumbnail_url,
           source_name: "HOKKAIDO CLIPS 編集部 & AIトラベルエディター",
-          source_url: "https://hokkaido-clips.com"
+          source_url: "[https://hokkaido-clips.com](https://hokkaido-clips.com)"
         }
       ]);
 
