@@ -41,14 +41,12 @@ export default function BlogDetailPage() {
       try {
         const decodedSlug = decodeURIComponent(slug);
 
-        // 1. blog_posts テーブルから slug または id で検索
-        let { data, error } = await supabase
+        let { data } = await supabase
           .from("blog_posts")
           .select("*")
           .or(`id.eq.${decodedSlug},slug.eq.${decodedSlug}`)
           .maybeSingle();
 
-        // 2. なければ blogs テーブルから検索
         if (!data) {
           const res2 = await supabase
             .from("blogs")
@@ -58,7 +56,6 @@ export default function BlogDetailPage() {
           data = res2.data;
         }
 
-        // 3. それでもなければ全取得してクライアント側で一致するものを探す（フォールバック）
         if (!data) {
           const { data: allPosts } = await supabase.from("blog_posts").select("*");
           if (allPosts && allPosts.length > 0) {
@@ -103,13 +100,49 @@ export default function BlogDetailPage() {
   }
 
   const title = post.タイトル_ja || post.title_ja || post.title || "無題のレポート";
-  const content = post.コンテンツ_ja || post.content_ja || post.content || post.summary || "";
+  const rawContent = post.コンテンツ_ja || post.content_ja || post.content || post.summary || "";
   const thumbnail = post.thumbnail_url && post.thumbnail_url.startsWith("http")
     ? post.thumbnail_url
     : "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80";
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 pb-20">
+      
+      {/* 記事内カスタムスタイル（見出し・段落・リストの綺麗デザイン） */}
+      <style jsx global>{`
+        .blog-article-content h2 {
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: #ffffff;
+          margin-top: 2rem;
+          margin-bottom: 0.75rem;
+          padding-left: 0.75rem;
+          border-left: 4px solid #2dd4bf;
+        }
+        .blog-article-content p {
+          color: #cbd5e1;
+          font-size: 0.95rem;
+          line-height: 1.8;
+          margin-bottom: 1.25rem;
+        }
+        .blog-article-content ul {
+          list-style-type: disc;
+          padding-left: 1.5rem;
+          margin-bottom: 1.25rem;
+          color: #cbd5e1;
+          font-size: 0.95rem;
+          line-height: 1.8;
+        }
+        .blog-article-content li {
+          margin-bottom: 0.5rem;
+        }
+        .blog-article-content strong {
+          color: #2dd4bf;
+          font-weight: 700;
+        }
+      `}</style>
+
+      {/* ヘッダー */}
       <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 shadow-xl">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link href="/" className="text-teal-400 hover:text-teal-300 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition">
@@ -119,7 +152,9 @@ export default function BlogDetailPage() {
         </div>
       </header>
 
+      {/* メイン記事 */}
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12 space-y-8">
+        
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-500/30">
@@ -135,14 +170,18 @@ export default function BlogDetailPage() {
           </h1>
         </div>
 
+        {/* アイキャッチ画像 */}
         <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl">
           <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
         </div>
 
-        <article className="bg-slate-900/60 border border-slate-800 p-6 md:p-8 rounded-2xl text-slate-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap shadow-xl">
-          {content}
-        </article>
+        {/* ★ HTMLタグを綺麗にパースして描画するエリア */}
+        <article 
+          className="blog-article-content bg-slate-900/60 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-xl"
+          dangerouslySetInnerHTML={{ __html: rawContent }}
+        />
 
+        {/* 戻るボタン */}
         <div className="pt-8 border-t border-slate-800 flex justify-center">
           <Link
             href="/"
