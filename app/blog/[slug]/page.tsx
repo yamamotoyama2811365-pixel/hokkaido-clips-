@@ -1,8 +1,6 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import React from "react";
 import Link from "next/link";
+import { Metadata } from "next";
 import { supabase } from "../../supabase";
 
 interface BlogPost {
@@ -28,64 +26,102 @@ interface BlogPost {
   created_at?: string;
 }
 
-export default function BlogDetailPage() {
-  const params = useParams();
-  const slug = params?.slug as string;
+// データベースから記事を取得する共通関数
+async function getPostData(slug: string): Promise<BlogPost | null> {
+  const decodedSlug = decodeURIComponent(slug);
+  try {
+    let { data } = await supabase
+      .from("blog_posts")
+      .select("*")
+      .or(`id.eq.${decodedSlug},slug.eq.${decodedSlug}`)
+      .maybeSingle();
 
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [loading, setLoading] = useState(true);
+    if (!data) {
+      const res2 = await supabase
+        .from("blogs")
+        .select("*")
+        .or(`id.eq.${decodedSlug},slug.eq.${decodedSlug}`)
+        .maybeSingle();
+      data = res2.data;
+    }
 
-  useEffect(() => {
-    async function fetchPost() {
-      if (!slug) return;
-      try {
-        const decodedSlug = decodeURIComponent(slug);
-
-        let { data } = await supabase
-          .from("blog_posts")
-          .select("*")
-          .or(`id.eq.${decodedSlug},slug.eq.${decodedSlug}`)
-          .maybeSingle();
-
-        if (!data) {
-          const res2 = await supabase
-            .from("blogs")
-            .select("*")
-            .or(`id.eq.${decodedSlug},slug.eq.${decodedSlug}`)
-            .maybeSingle();
-          data = res2.data;
-        }
-
-        if (!data) {
-          const { data: allPosts } = await supabase.from("blog_posts").select("*");
-          if (allPosts && allPosts.length > 0) {
-            data = allPosts.find((p: any) => p.id === decodedSlug || p.slug === decodedSlug);
-          }
-        }
-
-        if (data) {
-          setPost(data);
-        }
-      } catch (err) {
-        console.error("記事取得エラー:", err);
-      } finally {
-        setLoading(false);
+    if (!data) {
+      const { data: allPosts } = await supabase.from("blog_posts").select("*");
+      if (allPosts && allPosts.length > 0) {
+        data = allPosts.find((p: any) => p.id === decodedSlug || p.slug === decodedSlug);
       }
     }
 
-    fetchPost();
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-teal-400 flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="text-4xl animate-bounce">🧭</div>
-          <p className="text-xs tracking-wider font-bold">HOKKAIDO CLIPS Loading...</p>
-        </div>
-      </div>
-    );
+    return data || null;
+  } catch (err) {
+    console.error("記事取得エラー:", err);
+    return null;
   }
+}
+
+// 🔍 Google検索・SNSシェア用の動的メタデータを生成（SEO最重要）
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostData(slug);
+
+  if (!post) {
+    return {
+      title: "記事が見つかりませんでした | HOKKAIDO CLIPS",
+    };
+  }
+
+  const title = post.タイトル_ja || post.title_ja || post.title || "北海道旅行レポート";
+  const rawContent = post.コンテンツ_ja || post.content_ja || post.content || post.summary || "";
+  // HTMLタグを除去して説明文（120文字）を作成
+  const cleanDescription = rawContent
+    .replace(/<[^>]*>?/gm, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+
+  const thumbnail = post.thumbnail_url && post.thumbnail_url.startsWith("http")
+    ? post.thumbnail_url
+    : "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&auto=format&fit=crop&q=80";
+
+  return {
+    title: `${title} | HOKKAIDO CLIPS`,
+    description: `${cleanDescription}... 北海道観光情報・旅行ガイド`,
+    openGraph: {
+      title: `${title} | HOKKAIDO CLIPS`,
+      description: `${cleanDescription}...`,
+      url: `https://hokkaido-travel-portal.vercel.app/blog/${slug}`,
+      siteName: "HOKKAIDO CLIPS",
+      images: [
+        {
+          url: thumbnail,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | HOKKAIDO CLIPS`,
+      description: `${cleanDescription}...`,
+      images: [thumbnail],
+    },
+  };
+}
+
+// 📄 ページ本体の描画（サーバーサイドレンダリングでクローラーに即認識させる）
+export default async function BlogDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = await getPostData(slug);
 
   if (!post) {
     return (
@@ -107,42 +143,6 @@ export default function BlogDetailPage() {
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 pb-20">
-      
-      {/* 記事内カスタムスタイル（見出し・段落・リストの綺麗デザイン） */}
-      <style jsx global>{`
-        .blog-article-content h2 {
-          font-size: 1.25rem;
-          font-weight: 800;
-          color: #ffffff;
-          margin-top: 2rem;
-          margin-bottom: 0.75rem;
-          padding-left: 0.75rem;
-          border-left: 4px solid #2dd4bf;
-        }
-        .blog-article-content p {
-          color: #cbd5e1;
-          font-size: 0.95rem;
-          line-height: 1.8;
-          margin-bottom: 1.25rem;
-        }
-        .blog-article-content ul {
-          list-style-type: disc;
-          padding-left: 1.5rem;
-          margin-bottom: 1.25rem;
-          color: #cbd5e1;
-          font-size: 0.95rem;
-          line-height: 1.8;
-        }
-        .blog-article-content li {
-          margin-bottom: 0.5rem;
-        }
-        .blog-article-content strong {
-          color: #2dd4bf;
-          font-weight: 700;
-        }
-      `}</style>
-
-      {/* ヘッダー */}
       <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 shadow-xl">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link href="/" className="text-teal-400 hover:text-teal-300 text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition">
@@ -152,16 +152,14 @@ export default function BlogDetailPage() {
         </div>
       </header>
 
-      {/* メイン記事 */}
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12 space-y-8">
-        
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-500/30">
               📍 {post.area || "北海道"}
             </span>
             <span className="text-xs text-slate-400">
-              {post.created_at ? new Date(post.created_at).toLocaleDateString() : ""}
+              {post.created_at ? new Date(post.created_at).toLocaleDateString("ja-JP") : ""}
             </span>
           </div>
 
@@ -170,18 +168,16 @@ export default function BlogDetailPage() {
           </h1>
         </div>
 
-        {/* アイキャッチ画像 */}
         <div className="relative w-full h-64 md:h-96 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl">
           <img src={thumbnail} alt={title} className="w-full h-full object-cover" />
         </div>
 
-        {/* ★ HTMLタグを綺麗にパースして描画するエリア */}
+        {/* 記事本文 */}
         <article 
-          className="blog-article-content bg-slate-900/60 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-xl"
+          className="bg-slate-900/60 border border-slate-800 p-6 md:p-8 rounded-2xl shadow-xl space-y-4 text-slate-200 text-sm md:text-base leading-relaxed"
           dangerouslySetInnerHTML={{ __html: rawContent }}
         />
 
-        {/* 戻るボタン */}
         <div className="pt-8 border-t border-slate-800 flex justify-center">
           <Link
             href="/"
