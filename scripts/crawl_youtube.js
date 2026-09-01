@@ -77,7 +77,7 @@ async function generateBlogContent(videoTitle, videoDescription) {
     }
   }
 
-  // フォールバック（APIが使えなかった場合のデフォルト値）
+  // フォールバック（API未設定時のデフォルト値）
   return {
     spot_name: videoTitle.slice(0, 30),
     area: "北海道",
@@ -133,24 +133,20 @@ async function main() {
       console.log(`✨ 新規動画を処理中: ${title}`);
       const aiData = await generateBlogContent(title, description);
 
-      // map_queryが絶対にnullにならないよう安全に設定
       const safeMapQuery = aiData.map_query || aiData.spot_name || `${aiData.area || '北海道'} ${title.slice(0, 15)}`;
       const safeArea = aiData.area || "北海道";
       const slug = `hokkaido-${videoId}-${Date.now().toString().slice(-4)}`;
 
-      // 1. spots テーブルに挿入
-      const { data: spotInsert, error: spotError } = await supabase
+      // 1. spots テーブルに挿入（descriptionカラムを除外して確実に通す）
+      const { error: spotError } = await supabase
         .from("spots")
         .insert({
           title: title,
           youtube_id: videoId,
           area: safeArea,
-          map_query: safeMapQuery, // ← 必須エラーを完全解消
-          thumbnail_url: thumbnailUrl,
-          description: aiData.summary || description.slice(0, 150)
-        })
-        .select()
-        .maybeSingle();
+          map_query: safeMapQuery,
+          thumbnail_url: thumbnailUrl
+        });
 
       if (spotError) {
         console.error("Supabase spots挿入エラー:", spotError.message);
