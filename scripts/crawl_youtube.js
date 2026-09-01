@@ -24,15 +24,15 @@ async function generateBlogContent(videoTitle, videoDescription) {
 【出力フォーマット（必ず有効なJSONのみを出力してください）】
 {
   "spot_name": "具体的なスポット名（例: 白金青い池、小樽運河など）",
-  "area": "エリア名（例: 札幌, 函館, 小樽, 富良野, 知床, 登別, 旭川, 十勝, その他）",
-  "map_query": "Googleマップで検索できる正確なスポット名や住所",
-  "summary": "100文字程度の簡単な概要",
-  "article_title_ja": "魅力的でSEOに強い日本語のブログ記事タイトル",
-  "article_title_en": "English Blog Title",
-  "article_title_ko": "한국어 블로그 제목",
-  "content_ja": "<h2>見どころ</h2><p>...</p><h2>おすすめポイント</h2><p>...</p><h2>アクセス</h2><p>...</p>形式のHTML本文（500〜800文字程度）",
-  "content_en": "HTML format article in English",
-  "content_ko": "HTML format article in Korean"
+  "area": "札幌",
+  "map_query": "Googleマップ検索用スポット名",
+  "summary": "100文字程度の概要",
+  "article_title_ja": "魅力的な日本語タイトル",
+  "article_title_en": "English Title",
+  "article_title_ko": "한국어 제목",
+  "content_ja": "<h2>見どころ</h2><p>本文...</p><h2>アクセス</h2><p>アクセス方法...</p>",
+  "content_en": "<p>English Content</p>",
+  "content_ko": "<p>Korean Content</p>"
 }
 `;
 
@@ -51,7 +51,7 @@ async function generateBlogContent(videoTitle, videoDescription) {
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) return JSON.parse(text);
     } catch (e) {
-      console.warn("⚠️ Gemini生成失敗、フォールバックを試みます:", e.message);
+      console.warn("⚠️ Gemini生成失敗:", e.message);
     }
   }
 
@@ -77,7 +77,6 @@ async function generateBlogContent(videoTitle, videoDescription) {
     }
   }
 
-  // フォールバック（API未設定時のデフォルト値）
   return {
     spot_name: videoTitle.slice(0, 30),
     area: "北海道",
@@ -86,7 +85,7 @@ async function generateBlogContent(videoTitle, videoDescription) {
     article_title_ja: videoTitle,
     article_title_en: videoTitle,
     article_title_ko: videoTitle,
-    content_ja: `<h2>概要</h2><p>${videoDescription || videoTitle}</p><h2>アクセス</h2><p>詳細は現地情報をご確認ください。</p>`,
+    content_ja: `<h2>見どころ</h2><p>${videoDescription || videoTitle}</p><h2>アクセス</h2><p>詳細は現地情報をご確認ください。</p>`,
     content_en: `<p>${videoTitle}</p>`,
     content_ko: `<p>${videoTitle}</p>`
   };
@@ -118,7 +117,7 @@ async function main() {
       const description = item.snippet.description || "";
       const thumbnailUrl = item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url;
 
-      // 既存チェック（spotsテーブル）
+      // 重複チェック
       const { data: existingSpot } = await supabase
         .from("spots")
         .select("id")
@@ -133,11 +132,11 @@ async function main() {
       console.log(`✨ 新規動画を処理中: ${title}`);
       const aiData = await generateBlogContent(title, description);
 
-      const safeMapQuery = aiData.map_query || aiData.spot_name || `${aiData.area || '北海道'} ${title.slice(0, 15)}`;
       const safeArea = aiData.area || "北海道";
+      const safeMapQuery = aiData.map_query || aiData.spot_name || `${safeArea} ${title.slice(0, 15)}`;
       const slug = `hokkaido-${videoId}-${Date.now().toString().slice(-4)}`;
 
-      // 1. spots テーブルに挿入（descriptionカラムを除外して確実に通す）
+      // 1. spots テーブルへの保存
       const { error: spotError } = await supabase
         .from("spots")
         .insert({
@@ -149,11 +148,11 @@ async function main() {
         });
 
       if (spotError) {
-        console.error("Supabase spots挿入エラー:", spotError.message);
+        console.error("❌ spots保存エラー:", spotError.message);
         continue;
       }
 
-      // 2. blog_posts テーブルに挿入
+      // 2. blog_posts テーブルへの保存
       const { error: blogError } = await supabase
         .from("blog_posts")
         .insert({
@@ -173,23 +172,15 @@ async function main() {
         });
 
       if (blogError) {
-        // blogs テーブル構造の場合のフォールバック
-        await supabase.from("blogs").insert({
-          slug: slug,
-          title: aiData.article_title_ja || title,
-          content: aiData.content_ja,
-          summary: aiData.summary || "",
-          area: safeArea,
-          thumbnail_url: thumbnailUrl
-        });
+        console.error("❌ blog_posts保存エラー:", blogError.message);
+      } else {
+        console.log(`🎉 ブログ記事作成完了: ${aiData.article_title_ja || title}`);
       }
-
-      console.log(`✅ 登録完了: ${aiData.article_title_ja || title}`);
     }
 
-    console.log("✨ YouTube自動クロール & ブログ生成が完了しました。");
+    console.log("✨ すべての自動クロール & ブログ生成が完了しました。");
   } catch (err) {
-    console.error("❌ クロール実行中エラー:", err);
+    console.error("❌ 実行中エラー:", err);
   }
 }
 
