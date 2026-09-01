@@ -17,7 +17,7 @@ jobs:
       - name: Node.js のセットアップ
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # Node.js 22 に更新
           cache: 'npm'
 
       - name: 依存パッケージのインストール
