@@ -11,28 +11,26 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
 
-// AIによるブログ記事・スポット情報の自動生成
+// AIによるブログ記事生成
 async function generateBlogContent(videoTitle, videoDescription) {
   const prompt = `
-以下の北海道旅行のYouTube動画情報から、魅力的なブログ記事と観光スポット情報をJSON形式で作成してください。
+以下の北海道旅行のYouTube動画情報から、ブログ記事を作成してJSONで返してください。
 
 動画タイトル: ${videoTitle}
 動画説明文: ${videoDescription}
 
-【出力フォーマット（必ず有効なJSONのみを出力してください）】
+【JSONフォーマット】
 {
-  "spot_name": "具体的なスポット名（例: 白金青い池、小樽運河など）",
+  "spot_name": "観光地名",
   "area": "札幌",
-  "map_query": "Googleマップ検索用スポット名",
+  "map_query": "Googleマップ検索キーワード",
   "summary": "100文字程度の概要",
-  "article_title_ja": "魅力的な日本語タイトル",
-  "article_title_en": "English Title",
-  "article_title_ko": "한국어 제목",
-  "content_ja": "<h2>見どころ</h2><p>本文...</p><h2>アクセス</h2><p>アクセス方法...</p>",
-  "content_en": "<p>English Content</p>",
-  "content_ko": "<p>Korean Content</p>"
+  "title": "魅力的なブログ記事タイトル",
+  "content": "<h2>見どころ</h2><p>本文...</p><h2>アクセス</h2><p>アクセス方法...</p>"
 }
 `;
 
@@ -81,25 +79,21 @@ async function generateBlogContent(videoTitle, videoDescription) {
     spot_name: videoTitle.slice(0, 30),
     area: "北海道",
     map_query: `北海道 ${videoTitle.slice(0, 20)}`,
-    summary: videoDescription.slice(0, 100) || "北海道の魅力的なスポット紹介です。",
-    article_title_ja: videoTitle,
-    article_title_en: videoTitle,
-    article_title_ko: videoTitle,
-    content_ja: `<h2>見どころ</h2><p>${videoDescription || videoTitle}</p><h2>アクセス</h2><p>詳細は現地情報をご確認ください。</p>`,
-    content_en: `<p>${videoTitle}</p>`,
-    content_ko: `<p>${videoTitle}</p>`
+    summary: videoDescription.slice(0, 100) || "北海道のスポット紹介です。",
+    title: videoTitle,
+    content: `<h2>見どころ</h2><p>${videoDescription || videoTitle}</p>`
   };
 }
 
 async function main() {
-  console.log("🚀 YouTube自動クロールを開始します...");
+  console.log("🚀 YouTubeクロール & ブログ生成を開始します...");
 
   if (!YOUTUBE_API_KEY) {
-    console.error("❌ YOUTUBE_API_KEY が設定されていません。");
+    console.error("❌ YOUTUBE_API_KEY がありません。");
     return;
   }
 
-  const query = encodeURIComponent("北海道 旅行 ショート OR おすすめ");
+  const query = encodeURIComponent("北海道 旅行 おすすめ");
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&videoDuration=short&maxResults=10&order=date&key=${YOUTUBE_API_KEY}`;
 
   try {
@@ -107,80 +101,92 @@ async function main() {
     const searchData = await res.json();
 
     if (!searchData.items || searchData.items.length === 0) {
-      console.log("⚠️ 取得できるYouTube動画がありませんでした。");
+      console.log("⚠️ 取得可能な動画がありませんでした。");
       return;
     }
 
     for (const item of searchData.items) {
       const videoId = item.id.videoId;
+      if (!videoId) continue;
+
       const title = item.snippet.title;
       const description = item.snippet.description || "";
-      const thumbnailUrl = item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url;
+      const thumbnailUrl = item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url || "";
 
-      // 重複チェック
-      const { data: existingSpot } = await supabase
-        .from("spots")
+      // 重複チェック（blog_posts基準）
+      const { data: existingBlog } = await supabase
+        .from("blog_posts")
         .select("id")
         .eq("youtube_id", videoId)
         .maybeSingle();
 
-      if (existingSpot) {
-        console.log(`⏭️ 既存在庫のためスキップ: ${title}`);
+      if (existingBlog) {
+        console.log(`⏭️ 登録済みのためスキップ: ${title}`);
         continue;
       }
 
-      console.log(`✨ 新規動画を処理中: ${title}`);
+      console.log(`✨ 記事生成中: ${title}`);
       const aiData = await generateBlogContent(title, description);
 
       const safeArea = aiData.area || "北海道";
       const safeMapQuery = aiData.map_query || aiData.spot_name || `${safeArea} ${title.slice(0, 15)}`;
-      const slug = `hokkaido-${videoId}-${Date.now().toString().slice(-4)}`;
+      // 既存レコード（函館-178...）に合わせたslug生成
+      const slug = `${safeArea}-${Date.now().toString().slice(-8)}`;
 
-      // 1. spots テーブルへの保存
-      const { error: spotError } = await supabase
-        .from("spots")
-        .insert({
-          title: title,
-          youtube_id: videoId,
-          area: safeArea,
-          map_query: safeMapQuery,
-          thumbnail_url: thumbnailUrl
-        });
+      // 1. spots テーブルへの保存（重複無視）
+      await supabase.from("spots").upsert({
+        title: title,
+        youtube_id: videoId,
+        area: safeArea,
+        map_query: safeMapQuery,
+        thumbnail_url: thumbnailUrl
+      }, { onConflict: 'youtube_id' });
 
-      if (spotError) {
-        console.error("❌ spots保存エラー:", spotError.message);
-        continue;
-      }
+      // 2. blog_posts テーブルへの保存（全パターン網羅）
+      const blogPayload = {
+        slug: slug,
+        title: aiData.title || title,
+        title_ja: aiData.title || title,
+        content: aiData.content,
+        content_ja: aiData.content,
+        summary: aiData.summary || "",
+        area: safeArea,
+        thumbnail_url: thumbnailUrl,
+        youtube_id: videoId,
+        created_at: new Date().toISOString()
+      };
 
-      // 2. blog_posts テーブルへの保存
       const { error: blogError } = await supabase
         .from("blog_posts")
-        .insert({
-          slug: slug,
-          title: aiData.article_title_ja || title,
-          title_ja: aiData.article_title_ja || title,
-          title_en: aiData.article_title_en || title,
-          title_ko: aiData.article_title_ko || title,
-          content: aiData.content_ja,
-          content_ja: aiData.content_ja,
-          content_en: aiData.content_en,
-          content_ko: aiData.content_ko,
-          summary: aiData.summary || "",
-          area: safeArea,
-          thumbnail_url: thumbnailUrl,
-          youtube_id: videoId
-        });
+        .insert(blogPayload);
 
       if (blogError) {
         console.error("❌ blog_posts保存エラー:", blogError.message);
+        
+        // カラムが削られている場合の軽量フォールバック
+        const { error: fallbackErr } = await supabase
+          .from("blog_posts")
+          .insert({
+            slug: slug,
+            title: aiData.title || title,
+            content: aiData.content,
+            area: safeArea,
+            thumbnail_url: thumbnailUrl
+          });
+
+        if (fallbackErr) {
+          console.error("❌ フォールバック保存エラー:", fallbackErr.message);
+        } else {
+          console.log(`🎉 ブログ記事作成完了（フォールバック）: ${aiData.title || title}`);
+        }
       } else {
-        console.log(`🎉 ブログ記事作成完了: ${aiData.article_title_ja || title}`);
+        console.log(`🎉 ブログ記事作成完了: ${aiData.title || title}`);
       }
     }
 
-    console.log("✨ すべての自動クロール & ブログ生成が完了しました。");
+    console.log("✨ 全処理が完了しました。");
   } catch (err) {
-    console.error("❌ 実行中エラー:", err);
+    console.error("❌ 実行エラー:", err);
   }
 }
 
