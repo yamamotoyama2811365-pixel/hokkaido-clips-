@@ -1,6 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// 環境変数の取得
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
@@ -16,27 +15,52 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-// AIによる多言語ブログ記事の生成
+// ハッシュタグや不要文字のクリーニング
+function cleanTitle(rawTitle) {
+  return rawTitle.replace(/#\S+/g, '').replace(/【.*?】/g, '').trim();
+}
+
+// エリア自動判別
+function detectArea(text) {
+  const areas = ['札幌', '函館', '小樽', '富良野', '美瑛', '旭川', '知床', '登別', '洞爺湖', '苫小牧', '釧路', '帯広'];
+  for (const a of areas) {
+    if (text.includes(a)) return a;
+  }
+  return '北海道';
+}
+
+// AI記事生成
 async function generatePost(title, desc) {
+  const clean = cleanTitle(title);
+  const area = detectArea(`${clean} ${desc}`);
+
   const prompt = `
-以下の北海道旅行に関するYouTube動画から、日本語・英語・韓国語のブログ記事コンテンツをJSON形式で作成してください。
+あなたは北海道旅行メディア「HOKKAIDO CLIPS」のプロのトラベルライターです。
+以下のYouTube動画情報をもとに、読者が行きたくなる魅力的なブログ記事（日本語・英語・韓国語）を執筆してください。
 
 動画タイトル: ${title}
-動画説明文: ${desc}
+動画説明: ${desc}
+対象エリア: ${area}
 
-【出力フォーマット（JSON形式のみ出力してください）】
+【執筆ルール】
+1. タイトルはハッシュタグを含めず、読者がクリックしたくなる魅力的なブログタイトルにしてください（30文字前後）。
+2. content_jaはHTMLタグ（<h2>, <p>など）を使い、見どころ・おすすめポイント・魅力を300〜500文字程度でしっかり書いてください。
+3. 英語（en）と韓国語（ko）も同様に作成してください。
+
+【出力フォーマット（有効なJSONのみ）】
 {
-  "area": "札幌",
-  "map_query": "札幌 時計台",
-  "title_ja": "日本語タイトル",
-  "content_ja": "<h2>見どころ</h2><p>本文...</p><h2>アクセス</h2><p>詳細...</p>",
+  "area": "${area}",
+  "map_query": "${area} ${clean.slice(0, 10)}",
+  "title_ja": "魅力的な日本語タイトル",
+  "content_ja": "<h2>見どころ</h2><p>本文...</p><h2>おすすめポイント</h2><p>本文...</p>",
   "title_en": "English Title",
-  "content_en": "<h2>Highlights</h2><p>Content...</p>",
+  "content_en": "<h2>Highlights</h2><p>Body...</p>",
   "title_ko": "한국어 제목",
-  "content_ko": "<h2>주요 특징</h2><p>내용...</p>"
+  "content_ko": "<h2>주요 특징</h2><p>본문...</p>"
 }
 `;
 
+  // 1. Gemini API (gemini-1.5-flash / gemini-2.5-flash 対応)
   if (GEMINI_API_KEY) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -49,10 +73,16 @@ async function generatePost(title, desc) {
       });
       const data = await res.json();
       const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (txt) return JSON.parse(txt);
-    } catch (e) {}
+      if (txt) {
+        console.log("🤖 Geminiで記事を自動生成しました");
+        return JSON.parse(txt);
+      }
+    } catch (e) {
+      console.warn("⚠️ Gemini生成失敗、フォールバックを試みます:", e.message);
+    }
   }
 
+  // 2. OpenAI API
   if (OPENAI_API_KEY) {
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -66,27 +96,33 @@ async function generatePost(title, desc) {
       });
       const data = await res.json();
       const txt = data.choices?.[0]?.message?.content;
-      if (txt) return JSON.parse(txt);
-    } catch (e) {}
+      if (txt) {
+        console.log("🤖 OpenAIで記事を自動生成しました");
+        return JSON.parse(txt);
+      }
+    } catch (e) {
+      console.warn("⚠️ OpenAI生成失敗:", e.message);
+    }
   }
 
+  // AIキーがない場合の自動成形
   return {
-    area: "北海道",
-    map_query: `北海道 ${title.slice(0, 10)}`,
-    title_ja: title,
-    content_ja: `<h2>スポット紹介</h2><p>${desc || title}</p>`,
-    title_en: title,
-    content_en: `<h2>Spot Overview</h2><p>${desc || title}</p>`,
-    title_ko: title,
-    content_ko: `<h2>스팟 소개</h2><p>${desc || title}</p>`
+    area: area,
+    map_query: `${area} 観光`,
+    title_ja: clean || title,
+    content_ja: `<h2>${area}の魅力スポット</h2><p>${clean}の魅力や旬の情報を紹介します。北海道旅行の旅程にぜひ取り入れてみてください。</p><h2>現地情報</h2><p>${desc.replace(/#\S+/g, '') || '詳細は現地の案内または公式情報をご確認ください。'}</p>`,
+    title_en: clean || title,
+    content_en: `<h2>Discover ${area}</h2><p>Exploring the wonderful spots in Hokkaido.</p>`,
+    title_ko: clean || title,
+    content_ko: `<h2>${area} 여행 가이드</h2><p>홋카이도의 매력적인 관광 명소를 소개합니다.</p>`
   };
 }
 
 async function main() {
-  console.log("🚀 自動クロール＆記事生成処理を開始します...");
+  console.log("🚀 クロール＆ブログ生成を開始します...");
 
   if (!YOUTUBE_API_KEY) {
-    console.error("❌ YOUTUBE_API_KEY が見つかりません。");
+    console.error("❌ YOUTUBE_API_KEY がありません。");
     return;
   }
 
@@ -98,7 +134,7 @@ async function main() {
     const data = await res.json();
 
     if (!data.items || data.items.length === 0) {
-      console.log("⚠️ 取得可能な新着動画がありませんでした。");
+      console.log("⚠️ 取得できる動画がありませんでした。");
       return;
     }
 
@@ -110,7 +146,6 @@ async function main() {
       const desc = item.snippet.description || "";
       const thumb = item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url || "https://images.unsplash.com/photo-1503899036084-c55cdd92da26";
 
-      // 1. spots テーブルで重複チェック
       const { data: existingSpot } = await supabase
         .from("spots")
         .select("id")
@@ -118,35 +153,35 @@ async function main() {
         .maybeSingle();
 
       if (existingSpot) {
-        console.log(`⏭️ スキップ（登録済み）: ${videoTitle}`);
+        console.log(`⏭️ 登録済みスキップ: ${videoTitle}`);
         continue;
       }
 
-      console.log(`✨ 記事生成中: ${videoTitle}`);
+      console.log(`✍️ 記事生成開始: ${videoTitle}`);
       const ai = await generatePost(videoTitle, desc);
       const safeArea = ai.area || "北海道";
 
-      // 2. spots テーブルに保存
+      // 1. spots テーブル
       await supabase.from("spots").insert({
         title: videoTitle,
         youtube_id: videoId,
         area: safeArea,
-        map_query: ai.map_query || `${safeArea} ${videoTitle.slice(0, 10)}`,
+        map_query: ai.map_query || `${safeArea} 観光`,
         thumbnail_url: thumb
       });
 
-      // 3. blog_posts テーブルに保存（area カラムを追加）
+      // 2. blog_posts テーブル
       const timestamp = Date.now().toString().slice(-8);
       const slug = `${safeArea}-${timestamp}`;
 
       const { error: blogErr } = await supabase.from("blog_posts").insert({
         slug: slug,
         area: safeArea,
-        title_ja: ai.title_ja || videoTitle,
+        title_ja: ai.title_ja || cleanTitle(videoTitle),
         content_ja: ai.content_ja,
-        title_en: ai.title_en || videoTitle,
+        title_en: ai.title_en || cleanTitle(videoTitle),
         content_en: ai.content_en,
-        title_ko: ai.title_ko || videoTitle,
+        title_ko: ai.title_ko || cleanTitle(videoTitle),
         content_ko: ai.content_ko,
         thumbnail_url: thumb,
         source_name: "HOKKAIDO CLIPS 編集部 & AIトラベルライター",
@@ -154,15 +189,15 @@ async function main() {
       });
 
       if (blogErr) {
-        console.error("❌ blog_posts 保存エラー:", blogErr.message);
+        console.error("❌ blog_posts保存失敗:", blogErr.message);
       } else {
-        console.log(`🎉 記事追加成功: ${ai.title_ja || videoTitle}`);
+        console.log(`🎉 ブログ記事 保存成功: ${ai.title_ja}`);
       }
     }
 
-    console.log("🏁 すべての処理が完了しました。");
+    console.log("🏁 完了しました。");
   } catch (err) {
-    console.error("❌ 処理全体のエラー:", err);
+    console.error("❌ エラー:", err);
   }
 }
 
