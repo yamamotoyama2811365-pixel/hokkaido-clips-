@@ -9,18 +9,21 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
+if (!GEMINI_API_KEY) {
+  console.error("❌ GEMINI_API_KEY が渡っていません。");
+  process.exit(1);
+}
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-// 北海道観光の公式・優良フィード一覧（一次ソース）
 const FEEDS = [
-  { name: "北海道公式観光情報", url: "https://www.visit-hokkaido.jp/news/rss" },
   { name: "札幌観光協会 旬のたび", url: "https://www.sapporo.travel/feed/" },
-  { name: "函館公式観光ガイド", url: "https://www.hakobura.jp/feed/" }
+  { name: "函館公式観光ガイド", url: "https://www.hakobura.jp/feed/" },
+  { name: "北海道公式観光情報", url: "https://www.visit-hokkaido.jp/news/rss" }
 ];
 
-// 高解像度フリー写真のストック（エリア別フォールバック）
 const PHOTO_BANK = {
   "札幌": "https://images.unsplash.com/photo-1578637387939-43c525550085",
   "函館": "https://images.unsplash.com/photo-1548013146-72479768bada",
@@ -30,37 +33,33 @@ const PHOTO_BANK = {
   "北海道": "https://images.unsplash.com/photo-1517411032315-54ef2cb783bb"
 };
 
-// エリア自動判別
 function detectArea(text) {
-  const areas = ['札幌', '函館', '小樽', '富良野', '美瑛', '旭川', '知床', '登別', '洞爺湖', '苫小牧', '釧路', '帯広'];
+  const areas = ['札幌', '函館', '小樽', '富良野', '美瑛', '旭川', '知床', '登別', '洞爺湖', '苫小牧', '釧路', '帯広', '定山渓'];
   for (const a of areas) {
     if (text.includes(a)) return a;
   }
   return '北海道';
 }
 
-// GeminiによるSEO長文リライト生成
 async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
   const prompt = `
-あなたは北海道専門トラベルメディア「HOKKAIDO CLIPS」の専属プロライターです。
-以下の元記事（事実情報）を読み込み、著作権を侵害しないよう独自の構成・視点で再構築した、読者に有益で肉厚な旅行ブログ記事（日本語・英語・韓国語）を執筆してください。
+あなたは北海道専門トラベルメディア「HOKKAIDO CLIPS」のプロライターです。
+以下の元記事情報をもとに、著作権侵害にならないよう完全オリジナル構成で読者に役立つ肉厚な旅行ブログ記事（日・英・韓）を執筆してください。
 
-【元情報】
-タイトル: ${rawTitle}
-元記事抜粋: ${rawText}
+元タイトル: ${rawTitle}
+元記事内容: ${rawText}
 対象エリア: ${area}
-参照元URL: ${sourceUrl}
+参照URL: ${sourceUrl}
 
-【執筆レギュレーション】
-1. タイトル（title_ja）は読者の興味を引く魅力的なSEOタイトルにしてください（30〜35文字程度）。
-2. 本文（content_ja）は必ず以下のHTML構造（<h2>, <p>）で、合計800文字以上の具体的で読み応えのある記事にしてください。
-   - <h2>スポットの魅力と旬の見どころ</h2>
-   - <h2>旅を楽しむおすすめの巡り方・ポイント</h2>
-   - <h2>基本情報とアクセス</h2>
-3. 英語（title_en, content_en）および韓国語（title_ko, content_ko）も、簡略化せず同等の充実度で作成してください。
+【執筆ルール】
+1. title_ja はクリックしたくなる魅力的なSEOタイトルにしてください（30〜35文字）。
+2. content_ja は必ず<h2>と<p>を使い、以下の構成で800文字以上の具体的で読み応えのある本文にしてください。
+   - <h2>注目の見どころと旬の魅力</h2>
+   - <h2>旅行者におすすめの楽しみ方と巡り方</h2>
+   - <h2>現地アクセスと基本情報</h2>
+3. 英語（en）と韓国語（ko）も同様の品質で作成してください。
 
-【出力形式】
-JSONオブジェクトのみを出力してください。Markdownバッククォートは不要です。
+【出力フォーマット（有効なJSONのみ出力）】
 {
   "title_ja": "...",
   "content_ja": "<h2>...</h2><p>...</p>",
@@ -71,33 +70,49 @@ JSONオブジェクトのみを出力してください。Markdownバックク�
 }
 `;
 
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" }
-      })
-    });
-    const data = await res.json();
-    const txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (txt) return JSON.parse(txt);
-  } catch (e) {
-    console.error("Gemini APIエラー:", e.message);
+  // モデル呼び出し（v1beta / gemini-1.5-flash / gemini-2.5-flash に対応するフォールバック構成）
+  const models = ["gemini-1.5-flash", "gemini-2.5-flash", "gemini-1.5-pro"];
+
+  for (const model of models) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        console.warn(`⚠️ モデル ${model} 応答エラー: ${data.error.message}`);
+        continue;
+      }
+
+      let txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (txt) {
+        txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(txt);
+      }
+    } catch (err) {
+      console.warn(`⚠️ モデル ${model} 通信失敗: ${err.message}`);
+    }
   }
+
+  console.error("❌ 全てのGeminiモデルでの生成に失敗しました。");
   return null;
 }
 
-// 簡易RSSパース処理
 async function fetchRssItems(feed) {
   try {
-    const res = await fetch(feed.url);
+    const res = await fetch(feed.url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
     const xml = await res.text();
     const items = [];
     const itemMatches = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
 
-    for (const raw of itemMatches.slice(0, 3)) {
+    for (const raw of itemMatches.slice(0, 2)) {
       const titleMatch = raw.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || raw.match(/<title>(.*?)<\/title>/);
       const linkMatch = raw.match(/<link>(.*?)<\/link>/);
       const descMatch = raw.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || raw.match(/<description>(.*?)<\/description>/);
@@ -125,7 +140,6 @@ async function main() {
     const items = await fetchRssItems(feed);
 
     for (const item of items) {
-      // 既存記事の重複チェック
       const { data: existing } = await supabase
         .from("blog_posts")
         .select("id")
@@ -138,16 +152,18 @@ async function main() {
       }
 
       const area = detectArea(`${item.title} ${item.desc}`);
-      console.log(`✍️ Geminiが記事をオリジナル執筆中: [${area}] ${item.title}`);
+      console.log(`✍️ Gemini執筆開始: [${area}] ${item.title}`);
 
       const article = await generateDeepArticle(item.title, item.desc, item.link, area);
-      if (!article) continue;
+      if (!article) {
+        console.warn(`⚠️ 記事生成不可のためスキップ: ${item.title}`);
+        continue;
+      }
 
       const timestamp = Date.now().toString().slice(-8);
-      const slug = `${area}-${timestamp}`;
+      const slug = `${encodeURIComponent(area)}-${timestamp}`;
       const thumb = PHOTO_BANK[area] || PHOTO_BANK["北海道"];
 
-      // blog_posts テーブルに保存
       const { error } = await supabase.from("blog_posts").insert({
         slug: slug,
         area: area,
@@ -163,7 +179,7 @@ async function main() {
       });
 
       if (error) {
-        console.error("❌ 保存エラー:", error.message);
+        console.error("❌ Supabase保存エラー:", error.message);
       } else {
         console.log(`🎉 肉厚ブログ記事を公開しました: ${article.title_ja}`);
       }
