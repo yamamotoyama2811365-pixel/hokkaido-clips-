@@ -37,7 +37,6 @@ async function generatePost(title, desc) {
 }
 `;
 
-  // Gemini API がある場合
   if (GEMINI_API_KEY) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -54,7 +53,6 @@ async function generatePost(title, desc) {
     } catch (e) {}
   }
 
-  // OpenAI API がある場合
   if (OPENAI_API_KEY) {
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -72,7 +70,6 @@ async function generatePost(title, desc) {
     } catch (e) {}
   }
 
-  // APIがない場合のフォールバック
   return {
     area: "北海道",
     map_query: `北海道 ${title.slice(0, 10)}`,
@@ -113,7 +110,7 @@ async function main() {
       const desc = item.snippet.description || "";
       const thumb = item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url || "https://images.unsplash.com/photo-1503899036084-c55cdd92da26";
 
-      // 1. 重複チェック（spotsテーブル）
+      // 1. spots テーブルで重複チェック
       const { data: existingSpot } = await supabase
         .from("spots")
         .select("id")
@@ -138,12 +135,13 @@ async function main() {
         thumbnail_url: thumb
       });
 
-      // 3. blog_posts テーブルに保存（8/30まで動いていた完全仕様）
+      // 3. blog_posts テーブルに保存（area カラムを追加）
       const timestamp = Date.now().toString().slice(-8);
       const slug = `${safeArea}-${timestamp}`;
 
       const { error: blogErr } = await supabase.from("blog_posts").insert({
         slug: slug,
+        area: safeArea,
         title_ja: ai.title_ja || videoTitle,
         content_ja: ai.content_ja,
         title_en: ai.title_en || videoTitle,
