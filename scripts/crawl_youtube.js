@@ -33,6 +33,24 @@ const PHOTO_BANK = {
   "北海道": "https://images.unsplash.com/photo-1517411032315-54ef2cb783bb"
 };
 
+// slug用の英字変換テーブル（安全なURLにするため）
+const AREA_SLUG_MAP = {
+  "札幌": "sapporo",
+  "函館": "hakodate",
+  "小樽": "otaru",
+  "富良野": "furano",
+  "美瑛": "biei",
+  "旭川": "asahikawa",
+  "知床": "shiretoko",
+  "登別": "noboribetsu",
+  "洞爺湖": "toya",
+  "苫小牧": "tomakomai",
+  "釧路": "kushiro",
+  "帯広": "obihiro",
+  "定山渓": "jozankei",
+  "北海道": "hokkaido"
+};
+
 function detectArea(text) {
   const areas = ['札幌', '函館', '小樽', '富良野', '美瑛', '旭川', '知床', '登別', '洞爺湖', '苫小牧', '釧路', '帯広', '定山渓'];
   for (const a of areas) {
@@ -40,6 +58,8 @@ function detectArea(text) {
   }
   return '北海道';
 }
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
   const prompt = `
@@ -70,7 +90,6 @@ async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
 }
 `;
 
-  // 最新モデル gemini-3.6-flash を指定
   const models = ["gemini-3.6-flash", "gemini-2.5-flash"];
 
   for (const model of models) {
@@ -112,7 +131,7 @@ async function fetchRssItems(feed) {
     const items = [];
     const itemMatches = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
 
-    for (const raw of itemMatches.slice(0, 2)) {
+    for (const raw of itemMatches.slice(0, 3)) {
       const titleMatch = raw.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || raw.match(/<title>(.*?)<\/title>/);
       const linkMatch = raw.match(/<link>(.*?)<\/link>/);
       const descMatch = raw.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || raw.match(/<description>(.*?)<\/description>/);
@@ -160,8 +179,10 @@ async function main() {
         continue;
       }
 
-      const timestamp = Date.now().toString().slice(-8);
-      const slug = `${encodeURIComponent(area)}-${timestamp}`;
+      // slugを完全英数字にする（例: sapporo-1756948291）
+      const areaSlug = AREA_SLUG_MAP[area] || "hokkaido";
+      const timestamp = Math.floor(Date.now() / 1000);
+      const slug = `${areaSlug}-${timestamp}`;
       const thumb = PHOTO_BANK[area] || PHOTO_BANK["北海道"];
 
       const { error } = await supabase.from("blog_posts").insert({
@@ -181,8 +202,11 @@ async function main() {
       if (error) {
         console.error("❌ Supabase保存エラー:", error.message);
       } else {
-        console.log(`🎉 肉厚ブログ記事を公開しました: ${article.title_ja}`);
+        console.log(`🎉 肉厚ブログ記事を公開しました: ${article.title_ja} (slug: ${slug})`);
       }
+
+      // APIレート制限回避のため3秒待機
+      await sleep(3000);
     }
   }
 
