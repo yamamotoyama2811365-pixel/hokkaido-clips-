@@ -22,13 +22,15 @@ export default function HeroBanner() {
             </span>
           </div>
 
-          {/* メインキャッチコピー（1行でドカンと強調） */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-200 drop-shadow-[0_2px_20px_rgba(251,191,36,0.35)]">
-              「いまSNSでバズる北海道」
+          {/* メインキャッチコピー（カギカッコ・"いま"削除＆折り返し制御） */}
+          <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black tracking-tight leading-tight whitespace-normal">
+            <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-200 drop-shadow-[0_2px_20px_rgba(251,191,36,0.35)]">
+              SNSでバズる北海道
             </span>
             <br />
-            をAIで見つけよう！
+            <span className="inline-block text-white">
+              をAIで見つけよう！
+            </span>
           </h1>
 
           {/* ブランドタイトル */}
