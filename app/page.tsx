@@ -161,7 +161,7 @@ function cleanMapQuery(title: string, area: string): string {
   if (q.includes("奥芝商店")) return "奥芝商店 駅前創成寺 札幌市中央区北4条西5丁目";
   if (q.includes("ベッセルホテル")) return "ベッセルホテルカンパーナすすきの 札幌市中央区南5条西6丁目";
   if (q.includes("美瑛選果") || q.includes("コーンパン")) return "美瑛選果 新千歳空港店 国内線ターミナル2F";
-  if (q.includes("ルタオ") || q.includes("letao")) return "小樽洋菓子舗ルタオ 本店 小樽市堺町7-16";
+  if (q.includes("ルタオ")) return "小樽洋菓子舗ルタオ 本店 小樽市堺町7-16";
   if (q.includes("六花亭")) return "六花亭 札幌本店 札幌市中央区北4条西6丁目";
   if (q.includes("信玄")) return "らーめん信玄 南6条店 札幌市中央区南6条西8丁目";
   if (q.includes("一幻")) return "えびそば一幻 総本店 札幌市中央区南7条西9丁目";
@@ -647,43 +647,63 @@ export default function HokkaidoTravelApp() {
         {/* 【最上部】サイバーモダンな新ヒーロービュー（AIトレンド×ショート動画） */}
         <HeroBanner />
 
-        {/* ブログ一覧切り替え ＆ AI相談クイックアクション */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl no-print">
-          <div className="flex items-center gap-2">
-            <span className="text-base">📰</span>
-            <span className="text-xs sm:text-sm font-extrabold text-white">
-              公式一次情報 × AI深掘りレポート
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-bold border border-teal-500/30">
-              全 {blogPosts.length} 記事
-            </span>
-          </div>
+        {/* 【特大強化版】公式一次情報 × AI深掘りレポート バナー */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-[#0a1526] to-[#04111f] border-2 border-cyan-500/40 shadow-[0_10px_40px_-10px_rgba(6,182,212,0.25)] p-6 sm:p-8 md:p-10 no-print">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex items-center gap-2.5">
-            <button 
-              onClick={() => {
-                setShowBlogSection(!showBlogSection);
-                if (!showBlogSection) {
-                  setTimeout(() => {
-                    if (blogSectionRef.current) {
-                      blogSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }
-                  }, 100);
-                }
-              }}
-              className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-4 py-2 rounded-xl shadow-md transition duration-200 text-xs flex items-center gap-1.5"
-            >
-              <span>📖</span> {showBlogSection ? "ブログ一覧を閉じる" : "ブログ記事一覧を展開する"}
-            </button>
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 md:gap-8">
+            <div className="space-y-3 max-w-3xl">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400/50 text-cyan-300 text-xs sm:text-sm font-black tracking-wider uppercase">
+                  ⚡ 毎日自動更新
+                </span>
+                <span className="px-3 py-1 rounded-full bg-teal-500 text-slate-950 text-xs sm:text-sm font-black shadow-md shadow-teal-500/30">
+                  全 {blogPosts.length} 記事を公開中
+                </span>
+              </div>
 
-            <a 
-              href="#concierge" 
-              className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 font-bold px-4 py-2 rounded-xl transition duration-200 text-xs"
-            >
-              AIコンシェルジュ ➔
-            </a>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
+                <span className="text-3xl sm:text-4xl">📰</span>
+                <span>
+                  公式一次情報 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300">×</span> AI深掘りレポート
+                </span>
+              </h2>
+
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                北海道庁・各市町村観光協会の公式RSSから最新ニュースをリアルタイム取得。
+                <strong className="text-cyan-300 font-bold">「注目の魅力」「おすすめの巡り方」「現地アクセス」</strong>
+                をAI（Gemini）が徹底解説した長文ガイド記事をチェックできます。
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-auto shrink-0 justify-center">
+              <button 
+                onClick={() => {
+                  setShowBlogSection(!showBlogSection);
+                  if (!showBlogSection) {
+                    setTimeout(() => {
+                      if (blogSectionRef.current) {
+                        blogSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }, 100);
+                  }
+                }}
+                className="w-full sm:w-auto lg:w-64 py-4 px-8 bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-teal-300 text-slate-950 font-black text-sm sm:text-base rounded-2xl shadow-[0_4px_25px_rgba(45,212,191,0.4)] hover:shadow-[0_4px_35px_rgba(45,212,191,0.6)] hover:scale-102 transition duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span className="text-lg">📖</span>
+                <span>{showBlogSection ? "レポート一覧を閉じる" : "記事一覧を展開して読む"}</span>
+              </button>
+
+              <a 
+                href="#concierge" 
+                className="w-full sm:w-auto lg:w-64 py-3 px-6 bg-slate-900/90 hover:bg-slate-800 text-cyan-300 hover:text-white border border-cyan-500/40 font-extrabold text-xs sm:text-sm rounded-2xl text-center transition duration-200"
+              >
+                🤖 AIコンシェルジュに相談 ➔
+              </a>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* 独立したブログ記事一覧表示エリア */}
         {showBlogSection && (
@@ -714,7 +734,7 @@ export default function HokkaidoTravelApp() {
 
                 <button
                   onClick={() => setShowBlogSection(false)}
-                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl border border-slate-700 transition flex-shrink-0"
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl border border-slate-700 transition flex-shrink-0 cursor-pointer"
                 >
                   ✕ 閉じる
                 </button>
@@ -771,7 +791,7 @@ export default function HokkaidoTravelApp() {
                   <div className="pt-3 text-center">
                     <button
                       onClick={() => setVisibleBlogCount((prev) => prev + 10)}
-                      className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-teal-300 font-bold text-xs rounded-xl border border-teal-500/30 shadow transition"
+                      className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-teal-300 font-bold text-xs rounded-xl border border-teal-500/30 shadow transition cursor-pointer"
                     >
                       もっと見る （残り {filteredBlogPosts.length - visibleBlogCount} 件） ↓
                     </button>
@@ -836,7 +856,7 @@ export default function HokkaidoTravelApp() {
                       if (searchKeyword === tag) setSearchKeyword("");
                       else { setSelectedGenre("all"); setSearchKeyword(tag); }
                     }}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap border bg-slate-950/70 text-slate-400 border-slate-800 hover:text-slate-200"
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap border bg-slate-950/70 text-slate-400 border-slate-800 hover:text-slate-200 cursor-pointer"
                   >
                     #{tag}
                   </button>
@@ -876,7 +896,7 @@ export default function HokkaidoTravelApp() {
                     setSelectedGenre(tab.id as any);
                     setSearchKeyword("");
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                     selectedGenre === tab.id && !searchKeyword
                       ? tab.id === "night"
                         ? "bg-purple-600 text-white shadow-md shadow-purple-600/30 scale-102"
@@ -918,14 +938,14 @@ export default function HokkaidoTravelApp() {
 
                     <button
                       onClick={handleSaveTourPDF}
-                      className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5"
+                      className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
                     >
                       <span>📄</span> ツアーをPDF保存
                     </button>
 
                     <button 
                       onClick={() => setGeneratedPlan(null)} 
-                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs rounded-xl border border-slate-700 transition"
+                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs rounded-xl border border-slate-700 transition cursor-pointer"
                     >
                       <span>✕</span> 閉じる
                     </button>
@@ -1066,7 +1086,7 @@ export default function HokkaidoTravelApp() {
 
                         <button
                           onClick={(e) => toggleBookmark(spot.id, e)}
-                          className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center bg-black/60 text-slate-300 border border-white/20"
+                          className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center bg-black/60 text-slate-300 border border-white/20 cursor-pointer"
                         >
                           <span className="text-xs">{isBookmarked ? "❤️" : "🤍"}</span>
                         </button>
@@ -1124,7 +1144,7 @@ export default function HokkaidoTravelApp() {
                 </p>
                 <button
                   onClick={() => startGeneratingWithAd(true)}
-                  className="w-full py-2.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-rose-500/20 transition active:scale-98 flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-rose-500/20 transition active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>📌</span> マークしたスポットでツアールート生成
                 </button>
@@ -1146,7 +1166,7 @@ export default function HokkaidoTravelApp() {
                     <button
                       key={r.id}
                       onClick={() => setSelectedRegion(r.id)}
-                      className={`p-2.5 rounded-xl border text-left transition ${
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                         selectedRegion === r.id
                           ? "bg-teal-500 text-white border-teal-400 shadow-md shadow-teal-500/20"
                           : "bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700"
@@ -1168,7 +1188,7 @@ export default function HokkaidoTravelApp() {
                     <button
                       key={time}
                       onClick={() => setStayDuration(time)}
-                      className={`py-2 text-xs font-bold rounded-xl border transition ${
+                      className={`py-2 text-xs font-bold rounded-xl border transition cursor-pointer ${
                         stayDuration === time
                           ? "bg-teal-500 text-white border-teal-400 shadow-md shadow-teal-500/20"
                           : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
@@ -1186,7 +1206,7 @@ export default function HokkaidoTravelApp() {
                   id="currentLoc"
                   checked={startFromCurrentLocation}
                   onChange={(e) => setStartFromCurrentLocation(e.target.checked)}
-                  className="rounded text-teal-500 focus:ring-teal-400"
+                  className="rounded text-teal-500 focus:ring-teal-400 cursor-pointer"
                 />
                 <label htmlFor="currentLoc" className="text-xs text-slate-300 cursor-pointer font-medium">
                   現在地を出発地点にする
@@ -1196,7 +1216,7 @@ export default function HokkaidoTravelApp() {
               <button
                 onClick={() => startGeneratingWithAd(false)}
                 disabled={spots.length === 0}
-                className="w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 disabled:opacity-50 text-white font-extrabold text-xs md:text-sm rounded-xl shadow-lg transition active:scale-98 flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 disabled:opacity-50 text-white font-extrabold text-xs md:text-sm rounded-xl shadow-lg transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>🚀</span> <span>周遊ツアールートを自動生成</span>
               </button>
@@ -1238,7 +1258,7 @@ export default function HokkaidoTravelApp() {
 
                     <button
                       onClick={() => toggleBookmark(activeSpot.id)}
-                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition active:scale-95 flex-shrink-0 ${
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition active:scale-95 flex-shrink-0 cursor-pointer ${
                         bookmarkedIds.includes(activeSpot.id)
                           ? "bg-rose-500 text-white border-rose-400 shadow-md shadow-rose-500/30"
                           : "bg-slate-800 border-slate-700 text-slate-300 hover:text-white"
@@ -1388,7 +1408,7 @@ export default function HokkaidoTravelApp() {
               {isAdCompleted ? (
                 <button
                   onClick={handleFinishAndShowTour}
-                  className="w-full py-4 bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-300 hover:from-teal-300 hover:to-emerald-200 text-slate-950 font-black text-sm sm:text-base rounded-2xl shadow-[0_4px_30px_rgba(45,212,191,0.6)] transition active:scale-98 flex items-center justify-center gap-2 animate-bounce-short"
+                  className="w-full py-4 bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-300 hover:from-teal-300 hover:to-emerald-200 text-slate-950 font-black text-sm sm:text-base rounded-2xl shadow-[0_4px_30px_rgba(45,212,191,0.6)] transition active:scale-98 flex items-center justify-center gap-2 animate-bounce-short cursor-pointer"
                 >
                   <span>🎉</span> <span>ツアールートを見る（完成）</span> <span>➔</span>
                 </button>
