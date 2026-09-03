@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Script from "next/script";
 import Link from "next/link";
 import { supabase } from "./supabase";
+import HeroBanner from "@/components/HeroBanner";
 
 type Genre = "all" | "food" | "souvenir" | "stay" | "spot" | "night" | "travel_gear" | "blogs";
 type AreaRegion = "central" | "south" | "east" | "north";
@@ -643,59 +644,46 @@ export default function HokkaidoTravelApp() {
       {/* メインの全体コンテナ */}
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        {/* 【リッチバナー】北海道人気観光地紹介！ */}
-        <section className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 text-white p-6 md:p-12 border border-teal-500/30">
-          <div className="absolute inset-0 z-0 flex">
-            <div className="w-1/2 h-full relative">
-              <img 
-                src="https://images.unsplash.com/photo-1517840901100-8179e982acb7?w=1000&auto=format&fit=crop&q=80" 
-                alt="すすきの夜景・札幌の街並み" 
-                className="w-full h-full object-cover filter brightness-75"
-              />
-            </div>
-            <div className="w-1/2 h-full relative">
-              <img 
-                src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1000&auto=format&fit=crop&q=80" 
-                alt="北海道の大自然・山岳風景" 
-                className="w-full h-full object-cover filter brightness-75"
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/40 z-10" />
+        {/* 【最上部】サイバーモダンな新ヒーロービュー（AIトレンド×ショート動画） */}
+        <HeroBanner />
+
+        {/* ブログ一覧切り替え ＆ AI相談クイックアクション */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl no-print">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📰</span>
+            <span className="text-xs sm:text-sm font-extrabold text-white">
+              公式一次情報 × AI深掘りレポート
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-bold border border-teal-500/30">
+              全 {blogPosts.length} 記事
+            </span>
           </div>
 
-          <div className="relative z-20 max-w-2xl">
-            <span className="bg-teal-500 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-              Featured Content
-            </span>
-            <h2 className="text-2xl md:text-4xl font-black mt-3 mb-3 leading-tight text-white drop-shadow-md">
-              北海道人気観光地紹介！
-            </h2>
-            <p className="text-slate-200 text-xs md:text-sm mb-6 leading-relaxed drop-shadow">
-              大自然、絶品グルメ、温泉、ロマンチックな夜景など、北海道の秘められた魅力や最新のスポット情報を毎日お届けします。旅の計画や詳細レポートをご覧ください！
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => {
-                  setShowBlogSection(true);
+          <div className="flex items-center gap-2.5">
+            <button 
+              onClick={() => {
+                setShowBlogSection(!showBlogSection);
+                if (!showBlogSection) {
                   setTimeout(() => {
                     if (blogSectionRef.current) {
                       blogSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
                     }
                   }, 100);
-                }}
-                className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-5 py-3 rounded-xl shadow-lg transition duration-200 text-xs flex items-center gap-1.5"
-              >
-                <span>📖</span> 観光ブログ記事一覧を見る ({blogPosts.length}件)
-              </button>
-              <a 
-                href="#concierge" 
-                className="bg-slate-900/80 hover:bg-slate-900 text-teal-300 border border-teal-500/50 font-bold px-5 py-3 rounded-xl transition duration-200 text-xs backdrop-blur-sm"
-              >
-                AIコンシェルジュに相談する
-              </a>
-            </div>
+                }
+              }}
+              className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-extrabold px-4 py-2 rounded-xl shadow-md transition duration-200 text-xs flex items-center gap-1.5"
+            >
+              <span>📖</span> {showBlogSection ? "ブログ一覧を閉じる" : "ブログ記事一覧を展開する"}
+            </button>
+
+            <a 
+              href="#concierge" 
+              className="bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 font-bold px-4 py-2 rounded-xl transition duration-200 text-xs"
+            >
+              AIコンシェルジュ ➔
+            </a>
           </div>
-        </section>
+        </div>
 
         {/* 独立したブログ記事一覧表示エリア */}
         {showBlogSection && (
