@@ -70,8 +70,8 @@ async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
 }
 `;
 
-  // モデル呼び出し（v1beta / gemini-1.5-flash / gemini-2.5-flash に対応するフォールバック構成）
-  const models = ["gemini-1.5-flash", "gemini-2.5-flash", "gemini-1.5-pro"];
+  // 最新モデル gemini-3.6-flash を指定
+  const models = ["gemini-3.6-flash", "gemini-2.5-flash"];
 
   for (const model of models) {
     try {
