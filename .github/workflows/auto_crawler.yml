@@ -1,36 +1,31 @@
-name: Daily YouTube Crawler
+name: Auto Crawler
 
 on:
   schedule:
-    # 毎日 日本時間 午前9:00（UTC 0:00）に定期自動実行
+    # 毎日自動実行 (日本時間 朝9時)
     - cron: '0 0 * * *'
-  workflow_dispatch: # 手動実行ボタンを有効化
+  workflow_dispatch: # 手動実行ボタン用
 
 jobs:
-  crawl-and-generate:
+  crawl:
     runs-on: ubuntu-latest
 
     steps:
-      - name: リポジトリのチェックアウト
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Node.js のセットアップ
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Node.js 22 に更新
-          cache: 'npm'
+          node-version: 18
 
-      - name: 依存パッケージのインストール
-        run: |
-          npm install
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js
 
-      - name: YouTubeクローラー & ブログ自動生成の実行
+      - name: Run crawler script
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          node scripts/crawl_youtube.js
+        run: node scripts/crawl_youtube.js
