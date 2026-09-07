@@ -116,4 +116,146 @@ async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
 
       let txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (txt) {
-        txt = txt.replace(/```json/g, '').replace(/
+        // ❌ 修正前: txt.replace(/```json/g, '').replace(/\n/g, '').trim(); 
+        // ✅ 修正後 (コピペ時の構文エラー解消):
+        txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(txt);
+      }
+    } catch (err) {
+      console.warn(`⚠️ モデル ${model} 通信失敗: ${err.message}`);
+    }
+  }
+
+  console.error("❌ Geminiでの生成に失敗しました。");
+  return null;
+}
+
+async function fetchRssItems(feed) {
+  try {
+    const res = await fetch(feed.url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const xml = await res.text();
+    const items = [];
+    const itemMatches = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+
+    for (const raw of itemMatches.slice(0, 10)) {
+      const titleMatch = raw.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || raw.match(/<title>(.*?)<\/title>/);
+      const linkMatch = raw.match(/<link>(.*?)<\/link>/);
+      const descMatch = raw.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || raw.match(/<description>(.*?)<\/description>/);
+
+      const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+      const link = linkMatch ? linkMatch[1].trim() : '';
+      const desc = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+
+      if (title && link) {
+        items.push({ title, link, desc, sourceName: feed.name });
+      }
+    }
+    return items;
+  } catch (e) {
+    console.warn(`フィード取得失敗 (${feed.name}):`, e.message);
+    return [];
+  }
+}
+
+async function fetchYouTubeItems(query) {
+  if (!YOUTUBE_API_KEY) return [];
+  try {
+    const url = `[https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=$](https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=$){encodeURIComponent(query)}&relevanceLanguage=ja&key=${YOUTUBE_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.items) return [];
+
+    return data.items.map(item => ({
+      title: item.snippet.title,
+      link: `[https://www.youtube.com/watch?v=$](https://www.youtube.com/watch?v=$){item.id.videoId}`,
+      desc: item.snippet.description,
+      sourceName: "YouTube (" + item.snippet.channelTitle + ")"
+    }));
+  } catch (e) {
+    console.warn(`YouTube検索失敗 (${query}):`, e.message);
+    return [];
+  }
+}
+
+async function main() {
+  console.log("🚀 北海道観光記事の収集＆AI画像生成つき自動執筆を開始します...");
+  let createdCount = 0;
+  const MAX_PER_RUN = 5;
+
+  const candidates = [];
+  for (const feed of FEEDS) {
+    console.log(`📡 フィード確認中: ${feed.name}`);
+    const items = await fetchRssItems(feed);
+    candidates.push(...items);
+  }
+
+  if (YOUTUBE_API_KEY) {
+    for (const q of YOUTUBE_QUERIES) {
+      console.log(`🎥 YouTube検索中: ${q}`);
+      const ytItems = await fetchYouTubeItems(q);
+      candidates.push(...ytItems);
+    }
+  }
+
+  for (const item of candidates) {
+    if (createdCount >= MAX_PER_RUN) {
+      console.log(`🛑 1回の生成上限（${MAX_PER_RUN}件）に達したため終了します。`);
+      break;
+    }
+
+    const { data: existing } = await supabase
+      .from("blog_posts")
+      .select("id")
+      .eq("source_url", item.link)
+      .maybeSingle();
+
+    if (existing) {
+      continue;
+    }
+
+    const area = detectArea(`${item.title} ${item.desc}`);
+    console.log(`✍️ Gemini執筆 & 画像プロンプト考案中: [${area}] ${item.title}`);
+
+    const article = await generateDeepArticle(item.title, item.desc, item.link, area);
+    if (!article) {
+      console.warn(`⚠️ 記事生成不可のためスキップ: ${item.title}`);
+      continue;
+    }
+
+    const areaSlug = AREA_SLUG_MAP[area] || "hokkaido";
+    const timestamp = Math.floor(Date.now() / 1000) + createdCount;
+    const slug = `${areaSlug}-${timestamp}`;
+
+    const promptParam = encodeURIComponent(article.image_prompt || `${area} Hokkaido travel scenic spot nature photography`);
+    const seed = timestamp; 
+    const thumb = `[https://image.pollinations.ai/prompt/$](https://image.pollinations.ai/prompt/$){promptParam}?width=1200&height=630&nologo=true&seed=${seed}`;
+
+    const { error } = await supabase.from("blog_posts").insert({
+      slug: slug,
+      area: area,
+      title_ja: article.title_ja,
+      content_ja: article.content_ja,
+      title_en: article.title_en,
+      content_en: article.content_en,
+      title_ko: article.title_ko,
+      content_ko: article.content_ko,
+      thumbnail_url: thumb,
+      source_name: item.sourceName,
+      source_url: item.link
+    });
+
+    if (error) {
+      console.error("❌ Supabase保存エラー:", error.message);
+    } else {
+      createdCount++;
+      console.log(`🎉 記事とAI画像を公開しました (${createdCount}/${MAX_PER_RUN}): ${article.title_ja}`);
+      console.log(`   🖼️ 生成画像URL: ${thumb}`);
+    }
+
+    await sleep(3000);
+  }
+
+  console.log(`🏁 処理完了：新しく ${createdCount} 件の記事を作成しました。`);
+}
+
+main();
