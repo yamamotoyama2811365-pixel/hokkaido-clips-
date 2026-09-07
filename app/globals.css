@@ -1,1 +1,32 @@
-@import "tailwindcss";
+@layer base {
+  :root {
+    /* 背景: まっ白すぎない優しいスノーホワイト */
+    --background: #f8fafc;
+    /* 本文テキスト: 読みやすいダークスレートグレー */
+    --foreground: #1e293b;
+
+    /* カード・コンテナ背景: 純白で浮き立たせる */
+    --card: #ffffff;
+    --card-foreground: #1e293b;
+
+    /* 境界線: 極めて薄いグレーで柔らかく区切る */
+    --border: #e2e8f0;
+
+    /* メインアクセント: 澄んだ北海道の空のようなソフトブルー */
+    --primary: #0284c7;
+    --primary-foreground: #ffffff;
+
+    /* サブアクセント: 優しいラベンダー / セージグリーン */
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+
+    /* 補足テキスト・日付など */
+    --muted: #64748b;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
