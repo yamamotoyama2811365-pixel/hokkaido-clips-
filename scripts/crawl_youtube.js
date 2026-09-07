@@ -23,7 +23,6 @@ const FEEDS = [
   { name: "札幌観光協会 旬のたび", url: "https://www.sapporo.travel/feed/" },
   { name: "函館公式観光ガイド", url: "https://www.hakobura.jp/feed/" },
   { name: "北海道公式観光情報", url: "https://www.visit-hokkaido.jp/news/rss" },
-  { name: "旭川観光コンベンション", url: "https://www.atca.or.jp/feed/" },
   { name: "小樽観光協会 おたるぽーたる", url: "https://otaru.gr.jp/feed" }
 ];
 
@@ -94,7 +93,7 @@ async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
 }
 `;
 
-  const models = ["gemini-2.5-flash"];
+  const models = ["gemini-3.6-flash"];
 
   for (const model of models) {
     try {
@@ -116,8 +115,6 @@ async function generateDeepArticle(rawTitle, rawText, sourceUrl, area) {
 
       let txt = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (txt) {
-        // ❌ 修正前: txt.replace(/```json/g, '').replace(/\n/g, '').trim(); 
-        // ✅ 修正後 (コピペ時の構文エラー解消):
         txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
         return JSON.parse(txt);
       }
@@ -160,14 +157,15 @@ async function fetchRssItems(feed) {
 async function fetchYouTubeItems(query) {
   if (!YOUTUBE_API_KEY) return [];
   try {
-    const url = `[https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=$](https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=$){encodeURIComponent(query)}&relevanceLanguage=ja&key=${YOUTUBE_API_KEY}`;
+    const encoded = encodeURIComponent(query);
+    const url = "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=" + encoded + "&relevanceLanguage=ja&key=" + YOUTUBE_API_KEY;
     const res = await fetch(url);
     const data = await res.json();
     if (!data.items) return [];
 
     return data.items.map(item => ({
       title: item.snippet.title,
-      link: `[https://www.youtube.com/watch?v=$](https://www.youtube.com/watch?v=$){item.id.videoId}`,
+      link: "https://www.youtube.com/watch?v=" + item.id.videoId,
       desc: item.snippet.description,
       sourceName: "YouTube (" + item.snippet.channelTitle + ")"
     }));
@@ -227,8 +225,8 @@ async function main() {
     const slug = `${areaSlug}-${timestamp}`;
 
     const promptParam = encodeURIComponent(article.image_prompt || `${area} Hokkaido travel scenic spot nature photography`);
-    const seed = timestamp; 
-    const thumb = `[https://image.pollinations.ai/prompt/$](https://image.pollinations.ai/prompt/$){promptParam}?width=1200&height=630&nologo=true&seed=${seed}`;
+    const seed = timestamp;
+    const thumb = `https://image.pollinations.ai/prompt/${promptParam}?width=1200&height=630&nologo=true&seed=${seed}`;
 
     const { error } = await supabase.from("blog_posts").insert({
       slug: slug,
