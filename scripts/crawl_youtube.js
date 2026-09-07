@@ -22,8 +22,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 const FEEDS = [
   { name: "札幌観光協会 旬のたび", url: "https://www.sapporo.travel/feed/" },
   { name: "函館公式観光ガイド", url: "https://www.hakobura.jp/feed/" },
-  { name: "北海道公式観光情報", url: "https://www.visit-hokkaido.jp/news/rss" },
-  { name: "小樽観光協会 おたるぽーたる", url: "https://otaru.gr.jp/feed" }
+  { name: "北海道公式観光情報", url: "https://www.visit-hokkaido.jp/news/rss" }
 ];
 
 const YOUTUBE_QUERIES = [
@@ -224,9 +223,23 @@ async function main() {
     const timestamp = Math.floor(Date.now() / 1000) + createdCount;
     const slug = `${areaSlug}-${timestamp}`;
 
-    const promptParam = encodeURIComponent(article.image_prompt || `${area} Hokkaido travel scenic spot nature photography`);
+    // 記号を整理して安全なURLにする
+    const cleanPrompt = (article.image_prompt || `${area} Hokkaido travel scenic spot nature photography`)
+      .replace(/[^\w\s]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const promptParam = encodeURIComponent(cleanPrompt);
     const seed = timestamp;
     const thumb = `https://image.pollinations.ai/prompt/${promptParam}?width=1200&height=630&nologo=true&seed=${seed}`;
+
+    // 事前キャッシュリクエスト（サイト初回アクセス時のタイムアウトを防止）
+    console.log(`🎨 AI画像を先行レンダリング中...`);
+    try {
+      await fetch(thumb);
+    } catch (err) {
+      console.warn("⚠️ 先行キャッシュ生成スキップ:", err.message);
+    }
 
     const { error } = await supabase.from("blog_posts").insert({
       slug: slug,
