@@ -1,0 +1,50 @@
+name: Notify IndexNow
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '50 1 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: hokkaido-travel-indexnow
+  cancel-in-progress: true
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Submit live sitemap URLs to IndexNow
+        env:
+          SITE: https://hokkaido-travel-portal.vercel.app
+          INDEXNOW_KEY: 241b7052dc46c7cfd0e0769d27a385aa
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.request, urllib.error, xml.etree.ElementTree as ET
+          site=os.environ['SITE'].rstrip('/'); key=os.environ['INDEXNOW_KEY']; key_url=f'{site}/{key}.txt'
+          for _ in range(48):
+              try:
+                  req=urllib.request.Request(key_url,headers={'Cache-Control':'no-cache','User-Agent':'Mozilla/5.0 IndexNowVerifier/1.0'})
+                  if urllib.request.urlopen(req,timeout=10).read().decode().strip()==key: break
+              except Exception: pass
+              time.sleep(5)
+          else: raise SystemExit('IndexNow key file is not live')
+          root=ET.fromstring(urllib.request.urlopen(site+'/sitemap.xml',timeout=30).read()); ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          urls=[x.text.strip() for x in root.findall('s:url/s:loc',ns) if x.text]
+          urls=list(dict.fromkeys([site+'/']+urls))[:10000]
+          payload=json.dumps({'host':site.split('://',1)[1],'key':key,'keyLocation':key_url,'urlList':urls}).encode()
+          last=None
+          for attempt in range(1,7):
+              req=urllib.request.Request('https://api.indexnow.org/IndexNow',data=payload,headers={'Content-Type':'application/json; charset=utf-8'},method='POST')
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      print('IndexNow:',r.status,'URLs:',len(urls),'attempt:',attempt)
+                      if r.status in (200,202): raise SystemExit(0)
+              except urllib.error.HTTPError as e:
+                  last=e.code
+                  print('IndexNow retryable response:',e.code,'attempt:',attempt)
+                  if e.code not in (403,429): raise
+              if attempt<6: time.sleep(30)
+          raise SystemExit(f'IndexNow validation did not settle; last HTTP {last}')
+          PY
